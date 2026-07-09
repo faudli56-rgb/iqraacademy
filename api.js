@@ -19,9 +19,8 @@ async function callAPI(action, data = {}) {
     try {
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
-            mode: 'cors',
+            redirect: 'follow', // 👈 إضافة حاسمة لتتبع توجيه جوجل
             headers: {
-                // ✅ التعديل الحاسم: نستخدم text/plain لمنع المتصفح من إرسال طلب OPTIONS
                 'Content-Type': 'text/plain;charset=utf-8',
             },
             body: JSON.stringify({ action, data })
