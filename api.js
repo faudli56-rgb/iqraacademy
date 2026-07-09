@@ -21,7 +21,8 @@ async function callAPI(action, data = {}) {
             method: 'POST',
             mode: 'cors',
             headers: {
-                'Content-Type': 'application/json',
+                // ✅ التعديل الحاسم: نستخدم text/plain لمنع المتصفح من إرسال طلب OPTIONS
+                'Content-Type': 'text/plain;charset=utf-8',
             },
             body: JSON.stringify({ action, data })
         });
@@ -37,7 +38,6 @@ async function callAPI(action, data = {}) {
         };
     }
 }
-
 // ==========================================
 // 1. دوال المصادقة
 // ==========================================
