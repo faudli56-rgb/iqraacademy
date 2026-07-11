@@ -109,7 +109,7 @@ function renderAdsGrid(ads) {
                     <h3 class="font-black text-md text-[#0B1F4D] leading-snug mb-2">${ad.title}</h3>
                     <p class="text-xs text-slate-400 font-bold mb-4"><i class="fas fa-info-circle text-[#D4A017] ml-1"></i> ${ad.date}</p>
                 </div>
-                <button onclick="requestB2BQuote('${ad.title}')" class="w-full bg-slate-50 hover:bg-[#0B1F4D] text-[#0B1F4D] hover:text-white border border-slate-200 hover:border-transparent py-2.5 rounded-xl text-xs font-bold transition">طلب تفاصيل أو تقديم عرض</button>
+               <button onclick="requestB2BQuote('${ad.title}', '${ad.type}')" class="w-full bg-slate-50 hover:bg-[#0B1F4D] text-[#0B1F4D] hover:text-white border border-slate-200 hover:border-transparent py-2.5 rounded-xl text-xs font-bold transition">طلب تفاصيل أو تقديم عرض</button>
             </div>
         </div>`;
         container.insertAdjacentHTML('beforeend', cardMarkup);
@@ -368,16 +368,25 @@ function handleContactSubmit(e) {
     setTimeout(function() { btn.innerText = "إرسال الرسالة الحين"; e.target.reset(); }, 3000);
 }
 
-function requestB2BQuote(offerName) {
+function requestB2BQuote(offerName, offerType) {
     try {
-        var offerText = offerName ? offerName : "شراكات المنظمات والخدمات العامة";
-        var message = encodeURIComponent("مرحباً إدارة أكاديمية اقرأ،\nنحن جهة/منظمة ونرغب بالاستفسار عن: [" + offerText + "].\nنرجو التواصل معنا للتفاصيل.");
+        var message = "";
+        
+        // إذا كان الضغط من الزر الداخلي في العرض (يحتوي على نوع العرض)
+        if (offerType) {
+            message = encodeURIComponent("مرحباً إدارة أكاديمية اقرأ،\nنحن جهة/منظمة ونرغب بالاستفسار بخصوص:\nالقسم: (" + offerType + ")\nالعرض: [" + offerName + "]\nنرجو التواصل معنا للتفاصيل.");
+        } 
+        // إذا كان الضغط من الزر العام في أسفل الصفحة
+        else {
+            var offerText = offerName ? offerName : "شراكات المنظمات والخدمات العامة";
+            message = encodeURIComponent("مرحباً إدارة أكاديمية اقرأ،\nنحن جهة/منظمة ونرغب بالاستفسار عن: [" + offerText + "].\nنرجو التواصل معنا للتفاصيل.");
+        }
+        
         window.open('https://wa.me/967772914419?text=' + message, '_blank');
     } catch(e) {
         console.error("خطأ في فتح الواتساب:", e);
     }
 }
-
 // ==========================================
 // دوال التحقق من الشهادات
 // ==========================================
