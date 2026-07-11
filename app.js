@@ -99,9 +99,13 @@ function renderAdsGrid(ads) {
         var badgeColor = ad.type === 'مبادرات مجتمعية' ? 'bg-emerald-600' : 
                         (ad.type === 'منظمات دولية ومحلية' ? 'bg-[#0B1F4D]' : 'bg-[#D4A017]');
         
-        // تأمين النصوص لمنع أي أخطاء برمجية تتسبب في تعطل الزر
-        var safeTitle = ad.title ? ad.title.replace(/'/g, "\\'") : '';
-        var safeType = ad.type ? ad.type.replace(/'/g, "\\'") : '';
+        // 1. تنظيف النصوص من أي رموز قد تكسر الرابط
+        var safeTitle = ad.title ? ad.title.replace(/'/g, "").replace(/"/g, "") : '';
+        var safeType = ad.type ? ad.type.replace(/'/g, "").replace(/"/g, "") : 'غير محدد';
+        
+        // 2. تجهيز رسالة الواتساب والرابط مباشرة هنا
+        var message = encodeURIComponent("مرحباً إدارة أكاديمية اقرأ،\nنحن جهة/منظمة ونرغب بالاستفسار بخصوص:\nالقسم: (" + safeType + ")\nالعرض: [" + safeTitle + "]\nنرجو التواصل معنا للتفاصيل.");
+        var waLink = "https://wa.me/967772914419?text=" + message;
 
         var cardMarkup = `
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col h-full text-right">
@@ -114,7 +118,7 @@ function renderAdsGrid(ads) {
                     <h3 class="font-black text-md text-[#0B1F4D] leading-snug mb-2">${ad.title}</h3>
                     <p class="text-xs text-slate-400 font-bold mb-4"><i class="fas fa-info-circle text-[#D4A017] ml-1"></i> ${ad.date}</p>
                 </div>
-                <button onclick="requestB2BQuote('${safeTitle}', '${safeType}')" class="w-full bg-slate-50 hover:bg-[#0B1F4D] text-[#0B1F4D] hover:text-white border border-slate-200 hover:border-transparent py-2.5 rounded-xl text-xs font-bold transition">طلب تفاصيل أو تقديم عرض</button>
+                <button onclick="window.open('${waLink}', '_blank')" class="w-full bg-slate-50 hover:bg-[#0B1F4D] text-[#0B1F4D] hover:text-white border border-slate-200 hover:border-transparent py-2.5 rounded-xl text-xs font-bold transition">طلب تفاصيل أو تقديم عرض</button>
             </div>
         </div>`;
         container.insertAdjacentHTML('beforeend', cardMarkup);
