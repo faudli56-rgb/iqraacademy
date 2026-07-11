@@ -98,6 +98,11 @@ function renderAdsGrid(ads) {
     ads.forEach(function(ad) {
         var badgeColor = ad.type === 'مبادرات مجتمعية' ? 'bg-emerald-600' : 
                         (ad.type === 'منظمات دولية ومحلية' ? 'bg-[#0B1F4D]' : 'bg-[#D4A017]');
+        
+        // تأمين النصوص لمنع أي أخطاء برمجية تتسبب في تعطل الزر
+        var safeTitle = ad.title ? ad.title.replace(/'/g, "\\'") : '';
+        var safeType = ad.type ? ad.type.replace(/'/g, "\\'") : '';
+
         var cardMarkup = `
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col h-full text-right">
             <div class="relative h-48 overflow-hidden">
@@ -109,13 +114,12 @@ function renderAdsGrid(ads) {
                     <h3 class="font-black text-md text-[#0B1F4D] leading-snug mb-2">${ad.title}</h3>
                     <p class="text-xs text-slate-400 font-bold mb-4"><i class="fas fa-info-circle text-[#D4A017] ml-1"></i> ${ad.date}</p>
                 </div>
-               <button onclick="requestB2BQuote('${ad.title}', '${ad.type}')" class="w-full bg-slate-50 hover:bg-[#0B1F4D] text-[#0B1F4D] hover:text-white border border-slate-200 hover:border-transparent py-2.5 rounded-xl text-xs font-bold transition">طلب تفاصيل أو تقديم عرض</button>
+                <button onclick="requestB2BQuote('${safeTitle}', '${safeType}')" class="w-full bg-slate-50 hover:bg-[#0B1F4D] text-[#0B1F4D] hover:text-white border border-slate-200 hover:border-transparent py-2.5 rounded-xl text-xs font-bold transition">طلب تفاصيل أو تقديم عرض</button>
             </div>
         </div>`;
         container.insertAdjacentHTML('beforeend', cardMarkup);
     });
 }
-
 function moveAdSlide(dir) {
     if (!globalAds || globalAds.length === 0) return;
     currentAdIndex = (currentAdIndex + dir + globalAds.length) % globalAds.length;
@@ -372,17 +376,17 @@ function requestB2BQuote(offerName, offerType) {
     try {
         var message = "";
         
-        // إذا كان الضغط من الزر الداخلي في العرض (يحتوي على نوع العرض)
-        if (offerType) {
+        // التحقق مما إذا كان الضغط من الزر الداخلي (يحتوي على نوع العرض)
+        if (offerType && offerType !== 'undefined') {
             message = encodeURIComponent("مرحباً إدارة أكاديمية اقرأ،\nنحن جهة/منظمة ونرغب بالاستفسار بخصوص:\nالقسم: (" + offerType + ")\nالعرض: [" + offerName + "]\nنرجو التواصل معنا للتفاصيل.");
         } 
-        // إذا كان الضغط من الزر العام في أسفل الصفحة
+        // أو إذا كان الضغط من الزر العام أسفل الصفحة
         else {
             var offerText = offerName ? offerName : "شراكات المنظمات والخدمات العامة";
             message = encodeURIComponent("مرحباً إدارة أكاديمية اقرأ،\nنحن جهة/منظمة ونرغب بالاستفسار عن: [" + offerText + "].\nنرجو التواصل معنا للتفاصيل.");
         }
         
-        window.open('https://wa.me/967772914419?text=' + message, '_blank');
+        window.open('https://wa.me/967777644293?text=' + message, '_blank');
     } catch(e) {
         console.error("خطأ في فتح الواتساب:", e);
     }
