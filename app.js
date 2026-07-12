@@ -1580,11 +1580,15 @@ function renderAdminNewsList(news) {
     }
     
     news.forEach(function(item) {
+        // معالجة النصوص لتجنب كسر كود HTML بسبب علامات التنصيص والأسطر الجديدة
+        let safeTitle = item.title.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+        let safeDetails = item.details.replace(/'/g, "\\'").replace(/"/g, "&quot;").replace(/\n/g, "\\n").replace(/\r/g, "");
+
         adminList.insertAdjacentHTML('beforeend', `
             <div class="flex justify-between items-center p-2.5 bg-slate-50 border rounded-xl text-xs mb-2">
                 <span class="truncate w-1/2 font-bold text-[#0B1F4D]">${item.title}</span>
                 <div class="flex gap-1">
-                    <button onclick="openEditNewsModal('${item.id}', '${item.title.replace(/'/g, "\\'")}', '${item.details.replace(/'/g, "\\'")}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded shadow-sm transition"><i class="fas fa-edit"></i> تعديل</button>
+                    <button onclick="openEditNewsModal('${item.id}', '${safeTitle}', '${safeDetails}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded shadow-sm transition"><i class="fas fa-edit"></i> تعديل</button>
                     <button onclick="deleteNewsFinalAction('${item.id}')" class="bg-rose-500 hover:bg-rose-600 text-white px-2 py-1 rounded shadow-sm transition"><i class="fas fa-trash-alt"></i> حذف</button>
                 </div>
             </div>`);
@@ -1601,11 +1605,16 @@ function renderAdminAdsList(ads) {
     }
     
    ads.forEach(function(item) {
+        // معالجة النصوص لتجنب كسر كود HTML بسبب علامات التنصيص
+        let safeTitle = item.title.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+        let safeType = item.type.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+        let safeDate = item.date.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
         list.insertAdjacentHTML('beforeend', `
             <div class="flex justify-between items-center p-2.5 bg-slate-50 border rounded-xl text-xs mb-2">
                 <span class="truncate w-1/2 font-bold text-[#0B1F4D]">${item.title}</span>
                 <div class="flex gap-1">
-                    <button onclick="openEditAdModal('${item.id}', '${item.title.replace(/'/g, "\\'")}', '${item.type}', '${item.date}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded shadow-sm transition"><i class="fas fa-edit"></i> تعديل</button>
+                    <button onclick="openEditAdModal('${item.id}', '${safeTitle}', '${safeType}', '${safeDate}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded shadow-sm transition"><i class="fas fa-edit"></i> تعديل</button>
                     <button onclick="deleteAdFinalAction('${item.id}')" class="bg-rose-500 hover:bg-rose-600 text-white px-2 py-1 rounded shadow-sm transition"><i class="fas fa-trash-alt"></i> حذف</button>
                 </div>
             </div>`);
