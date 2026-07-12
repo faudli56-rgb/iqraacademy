@@ -92,13 +92,42 @@ function popupActionRegister() {
 }
 
 function navigateTo(pageId) {
+    // --- 1. التحقق من الشاشات المتراكبة التي تمنع التنقل المباشر ---
+    
+    // أ. التحقق من صفحة تفاصيل الدورة (صفحة الهبوط)
+    var landingContainer = document.getElementById('landing-page-container');
+    if (landingContainer && !landingContainer.classList.contains('hidden')) {
+        showToast('الرجاء الضغط على زر "العودة للرئيسية" أولاً للخروج من تفاصيل الدورة.', true);
+        return; // إيقاف التنقل
+    }
+
+    // ب. التحقق من لوحة تحكم الإدارة
+    var adminContent = document.getElementById('admin-content');
+    if (adminContent && adminContent.style.display === 'block') {
+        showToast('أنت حالياً في لوحة الإدارة. يرجى الضغط على زر "خروج" أولاً.', true);
+        return; // إيقاف التنقل
+    }
+
+    // ج. التحقق من نموذج تسديد الرسوم المفتوح
+    var paymentForm = document.getElementById('payment-form-section');
+    if (paymentForm && !paymentForm.classList.contains('hidden')) {
+        showToast('الرجاء الضغط على "رجوع" أعلى نموذج الدفع لإلغاء العملية أولاً.', true);
+        return; // إيقاف التنقل
+    }
+
+    // --- 2. التنفيذ الطبيعي للتنقل إذا لم تكن هناك عوائق ---
     document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('header nav a').forEach(b => b.classList.remove('nav-active'));
-    if(document.getElementById('page-' + pageId)) document.getElementById('page-' + pageId).classList.add('active');
-    if(document.getElementById('btn-' + pageId)) document.getElementById('btn-' + pageId).classList.add('nav-active');
+    
+    if(document.getElementById('page-' + pageId)) {
+        document.getElementById('page-' + pageId).classList.add('active');
+    }
+    if(document.getElementById('btn-' + pageId)) {
+        document.getElementById('btn-' + pageId).classList.add('nav-active');
+    }
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
 function trackButtonClick(buttonName) {
     if(buttonName === 'WhatsApp_Float') { 
         try { 
