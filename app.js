@@ -1555,13 +1555,13 @@ function renderAdminNewsList(news) {
     news.forEach(function(item) {
         adminList.insertAdjacentHTML('beforeend', `
             <div class="flex justify-between items-center p-2.5 bg-slate-50 border rounded-xl text-xs mb-2">
-                <span class="truncate w-2/3 font-bold text-[#0B1F4D]">${item.title}</span>
-                <button onclick="deleteNewsFinalAction('${item.id}')" class="bg-rose-500 hover:bg-rose-600 text-white px-2.5 py-1 rounded shadow-sm transition">
-                    <i class="fas fa-trash-alt"></i> حذف
-                </button>
+                <span class="truncate w-1/2 font-bold text-[#0B1F4D]">${item.title}</span>
+                <div class="flex gap-1">
+                    <button onclick="openEditNewsModal('${item.id}', '${item.title.replace(/'/g, "\\'")}', '${item.details.replace(/'/g, "\\'")}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded shadow-sm transition"><i class="fas fa-edit"></i> تعديل</button>
+                    <button onclick="deleteNewsFinalAction('${item.id}')" class="bg-rose-500 hover:bg-rose-600 text-white px-2 py-1 rounded shadow-sm transition"><i class="fas fa-trash-alt"></i> حذف</button>
+                </div>
             </div>`);
     });
-}
 
 function renderAdminAdsList(ads) {
     var list = document.getElementById('admin-ads-list');
@@ -1573,16 +1573,16 @@ function renderAdminAdsList(ads) {
         return; 
     }
     
-    ads.forEach(function(item) {
+   ads.forEach(function(item) {
         list.insertAdjacentHTML('beforeend', `
             <div class="flex justify-between items-center p-2.5 bg-slate-50 border rounded-xl text-xs mb-2">
-                <span class="truncate w-2/3 font-bold text-[#0B1F4D]">${item.title}</span>
-                <button onclick="deleteAdFinalAction('${item.id}')" class="bg-rose-500 hover:bg-rose-600 text-white px-2.5 py-1 rounded shadow-sm transition">
-                    <i class="fas fa-trash-alt"></i> حذف
-                </button>
+                <span class="truncate w-1/2 font-bold text-[#0B1F4D]">${item.title}</span>
+                <div class="flex gap-1">
+                    <button onclick="openEditAdModal('${item.id}', '${item.title.replace(/'/g, "\\'")}', '${item.type}', '${item.date}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded shadow-sm transition"><i class="fas fa-edit"></i> تعديل</button>
+                    <button onclick="deleteAdFinalAction('${item.id}')" class="bg-rose-500 hover:bg-rose-600 text-white px-2 py-1 rounded shadow-sm transition"><i class="fas fa-trash-alt"></i> حذف</button>
+                </div>
             </div>`);
     });
-}
 
 // ==========================================
 // دوال إضافة وحذف الأخبار والإعلانات
@@ -1778,7 +1778,63 @@ window.addEventListener('DOMContentLoaded', function() {
         setTimeout(initializeWebsiteLayout, 300);
     }
 });
+// ====== دوال تعديل الأخبار ======
+function openEditNewsModal(id, title, content) {
+    document.getElementById('edit-news-id').value = id;
+    document.getElementById('edit-news-title').value = title;
+    document.getElementById('edit-news-content').value = content;
+    document.getElementById('edit-news-modal').classList.remove('hidden');
+}
 
+async function submitNewsEdit() {
+    var id = document.getElementById('edit-news-id').value;
+    var data = {
+        title: document.getElementById('edit-news-title').value,
+        content: document.getElementById('edit-news-content').value
+    };
+    var btn = document.querySelector('#edit-news-modal button');
+    var originalText = btn.innerText;
+    btn.innerText = "جاري التحديث..."; btn.disabled = true;
+    try {
+        const res = await callAPI('updateNews', { id: id, data: data }); 
+        btn.innerText = originalText; btn.disabled = false;
+        if(res.success) {
+            alert("✅ تم التعديل بنجاح");
+            document.getElementById('edit-news-modal').classList.add('hidden');
+            loadNewsFromServer();
+        } else alert("❌ خطأ: " + res.error);
+    } catch(err) { alert("خطأ سيرفر: " + err); btn.innerText = originalText; btn.disabled = false; }
+}
+
+// ====== دوال تعديل العروض (الشركات) ======
+function openEditAdModal(id, title, type, date) {
+    document.getElementById('edit-ad-id').value = id;
+    document.getElementById('edit-ad-title').value = title;
+    document.getElementById('edit-ad-type').value = type;
+    document.getElementById('edit-ad-date').value = date;
+    document.getElementById('edit-ad-modal').classList.remove('hidden');
+}
+
+async function submitAdEdit() {
+    var id = document.getElementById('edit-ad-id').value;
+    var data = {
+        title: document.getElementById('edit-ad-title').value,
+        type: document.getElementById('edit-ad-type').value,
+        date: document.getElementById('edit-ad-date').value
+    };
+    var btn = document.querySelector('#edit-ad-modal button');
+    var originalText = btn.innerText;
+    btn.innerText = "جاري التحديث..."; btn.disabled = true;
+    try {
+        const res = await callAPI('updateAd', { id: id, data: data });
+        btn.innerText = originalText; btn.disabled = false;
+        if(res.success) {
+            alert("✅ تم التعديل بنجاح");
+            document.getElementById('edit-ad-modal').classList.add('hidden');
+            loadRealAdsFromServer();
+        } else alert("❌ خطأ: " + res.error);
+    } catch(err) { alert("خطأ سيرفر: " + err); btn.innerText = originalText; btn.disabled = false; }
+}
 // ==========================================
 // دوال الأمان - حماية التخزين المحلي
 // ==========================================
