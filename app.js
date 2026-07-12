@@ -1708,7 +1708,63 @@ async function deleteAdFinalAction(adId) {
         alert("❌ خطأ في الاتصال: " + err);
     }
 }
+// ====== دوال تعديل الأخبار ======
+function openEditNewsModal(id, title, content) {
+    document.getElementById('edit-news-id').value = id;
+    document.getElementById('edit-news-title').value = title;
+    document.getElementById('edit-news-content').value = content;
+    document.getElementById('edit-news-modal').classList.remove('hidden');
+}
 
+async function submitNewsEdit() {
+    var id = document.getElementById('edit-news-id').value;
+    var data = {
+        title: document.getElementById('edit-news-title').value,
+        content: document.getElementById('edit-news-content').value
+    };
+    var btn = document.querySelector('#edit-news-modal button');
+    var originalText = btn.innerText;
+    btn.innerText = "جاري التحديث..."; btn.disabled = true;
+    try {
+        const res = await callAPI('updateNews', { id: id, data: data }); 
+        btn.innerText = originalText; btn.disabled = false;
+        if(res.success) {
+            alert("✅ تم التعديل بنجاح");
+            document.getElementById('edit-news-modal').classList.add('hidden');
+            loadNewsFromServer();
+        } else alert("❌ خطأ: " + res.error);
+    } catch(err) { alert("خطأ سيرفر: " + err); btn.innerText = originalText; btn.disabled = false; }
+}
+
+// ====== دوال تعديل العروض (الشركات) ======
+function openEditAdModal(id, title, type, date) {
+    document.getElementById('edit-ad-id').value = id;
+    document.getElementById('edit-ad-title').value = title;
+    document.getElementById('edit-ad-type').value = type;
+    document.getElementById('edit-ad-date').value = date;
+    document.getElementById('edit-ad-modal').classList.remove('hidden');
+}
+
+async function submitAdEdit() {
+    var id = document.getElementById('edit-ad-id').value;
+    var data = {
+        title: document.getElementById('edit-ad-title').value,
+        type: document.getElementById('edit-ad-type').value,
+        date: document.getElementById('edit-ad-date').value
+    };
+    var btn = document.querySelector('#edit-ad-modal button');
+    var originalText = btn.innerText;
+    btn.innerText = "جاري التحديث..."; btn.disabled = true;
+    try {
+        const res = await callAPI('updateAd', { id: id, data: data });
+        btn.innerText = originalText; btn.disabled = false;
+        if(res.success) {
+            alert("✅ تم التعديل بنجاح");
+            document.getElementById('edit-ad-modal').classList.add('hidden');
+            loadRealAdsFromServer();
+        } else alert("❌ خطأ: " + res.error);
+    } catch(err) { alert("خطأ سيرفر: " + err); btn.innerText = originalText; btn.disabled = false; }
+}
 // ==========================================
 // دوال البحث والفلترة
 // ==========================================
