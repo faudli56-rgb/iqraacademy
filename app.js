@@ -255,14 +255,13 @@ function renderCourses(courses) {
     if(homeFeaturedContainer) homeFeaturedContainer.innerHTML = ''; 
     if(adminCoursesList) adminCoursesList.innerHTML = '';
 
-    // 1️⃣ فلترة وترتيب الدورات المخصصة للرئيسية (التي تحمل أرقام 1, 2, 3)
+    // 1️⃣ فلترة وترتيب الدورات المخصصة للرئيسية
     var featuredCourses = courses.filter(function(c) {
         return c.featuredOrder === 1 || c.featuredOrder === 2 || c.featuredOrder === 3;
     }).sort(function(a, b) {
         return a.featuredOrder - b.featuredOrder;
     });
 
-    // في حال لم تقم بتحديد أرقام في الشيت، نعرض أول 3 دورات تلقائياً كإجراء احتياطي
     if (featuredCourses.length === 0) {
         featuredCourses = courses.slice(0, 3);
     }
@@ -270,7 +269,7 @@ function renderCourses(courses) {
     // 2️⃣ طباعة الدورات المميزة في الصفحة الرئيسية
     featuredCourses.forEach(function(c) {
         var cardMarkup = `
-        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden flex flex-col justify-between text-right transition hover:shadow-xl" data-category="${c.category}">
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden flex flex-col justify-between text-right transition hover:shadow-xl h-full" data-category="${c.category}">
            <img class="h-44 w-full object-cover" src="${getValidImageUrl(c.image)}" loading="lazy">
             <div class="p-5 flex-1 flex flex-col justify-between">
                 <div class="mb-4">
@@ -279,12 +278,17 @@ function renderCourses(courses) {
                     <p class="text-xs text-slate-500 mt-1.5"><i class="fas fa-chalkboard-teacher ml-1.5 text-[#D4A017]"></i> المدرب: ${escapeHTML(c.trainer)}</p>
                     <p class="text-xs text-slate-400 mt-0.5"><i class="fas fa-clock ml-1.5 text-slate-400"></i> المدة: ${c.duration || '36 ساعة تدريبية'}</p>
                 </div>
-                <div class="flex justify-between items-center pt-4 border-t border-slate-50">
-                    <span class="text-amber-600 font-extrabold text-sm">${c.fee}</span>
-                    ${c.discount ? `<del class="text-slate-400 text-[10px] font-bold">${c.discount}</del>` : ''}
-                    <div class="flex gap-2">
-                        <button onclick="openLandingPage('${c.title}')" class="bg-slate-100 hover:bg-slate-200 text-[#0B1F4D] text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 transition cursor-pointer">التفاصيل</button>
-                        <button onclick="selectCourseDirectly('${c.title}')" class="bg-[#0B1F4D] hover:bg-[#132F6B] text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md transition cursor-pointer">سجل الآن</button>
+                <div class="flex justify-between items-end pt-4 border-t border-slate-50 mt-auto">
+                    <div class="flex flex-col gap-1.5">
+                        ${c.discount && c.discount.trim() !== '' ? `
+                        <span class="bg-rose-50 border border-rose-100 text-rose-600 text-[10px] font-black px-2 py-0.5 rounded shadow-sm w-max">
+                            <i class="fas fa-tags ml-1"></i>بدلاً من <del class="text-slate-400 font-bold">${c.discount}</del>
+                        </span>` : ''}
+                        <span class="text-amber-600 font-extrabold text-sm">${c.fee}</span>
+                    </div>
+                    <div class="flex gap-2 mb-0.5">
+                        <button onclick="openLandingPage('${escapeHTML(c.title)}')" class="bg-slate-100 hover:bg-slate-200 text-[#0B1F4D] text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 transition cursor-pointer">التفاصيل</button>
+                        <button onclick="selectCourseDirectly('${escapeHTML(c.title)}')" class="bg-[#0B1F4D] hover:bg-[#132F6B] text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md transition cursor-pointer">سجل الآن</button>
                     </div>
                 </div>
             </div>
@@ -292,23 +296,29 @@ function renderCourses(courses) {
         if(homeFeaturedContainer) homeFeaturedContainer.insertAdjacentHTML('beforeend', cardMarkup);
     });
 
-    // 3️⃣ طباعة كل الدورات في صفحة (الدورات التدريبية المكتملة) ولوحة التحكم
+    // 3️⃣ طباعة كل الدورات في صفحة (الدورات التدريبية المكتملة)
     courses.forEach(function(c, index) {
         var cardMarkup = `
-        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden flex flex-col justify-between text-right transition hover:shadow-xl" data-category="${c.category}">
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden flex flex-col justify-between text-right transition hover:shadow-xl h-full" data-category="${c.category}">
            <img class="h-44 w-full object-cover" src="${getValidImageUrl(c.image)}" loading="lazy">
             <div class="p-5 flex-1 flex flex-col justify-between">
                 <div class="mb-4">
                     <span class="bg-slate-100 text-[#0B1F4D] text-[10px] font-bold px-2.5 py-1 rounded-md border border-slate-200">${c.category}</span>
-                    <h3 class="font-bold text-md text-[#0B1F4D] mt-3">${c.title}</h3>
-                    <p class="text-xs text-slate-500 mt-1.5"><i class="fas fa-chalkboard-teacher ml-1.5 text-[#D4A017]"></i> المدرب: ${c.trainer}</p>
+                    <h3 class="font-bold text-md text-[#0B1F4D] mt-3">${escapeHTML(c.title)}</h3>
+                    <p class="text-xs text-slate-500 mt-1.5"><i class="fas fa-chalkboard-teacher ml-1.5 text-[#D4A017]"></i> المدرب: ${escapeHTML(c.trainer)}</p>
                     <p class="text-xs text-slate-400 mt-0.5"><i class="fas fa-clock ml-1.5 text-slate-400"></i> المدة: ${c.duration || '36 ساعة تدريبية'}</p>
                 </div>
-                <div class="flex justify-between items-center pt-4 border-t border-slate-50">
-                    <span class="text-amber-600 font-extrabold text-sm">${c.fee}</span>
-                    <div class="flex gap-2">
-                        <button onclick="openLandingPage('${c.title}')" class="bg-slate-100 hover:bg-slate-200 text-[#0B1F4D] text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 transition cursor-pointer">التفاصيل</button>
-                        <button onclick="selectCourseDirectly('${c.title}')" class="bg-[#0B1F4D] hover:bg-[#132F6B] text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md transition cursor-pointer">سجل الآن</button>
+                <div class="flex justify-between items-end pt-4 border-t border-slate-50 mt-auto">
+                    <div class="flex flex-col gap-1.5">
+                        ${c.discount && c.discount.trim() !== '' ? `
+                        <span class="bg-rose-50 border border-rose-100 text-rose-600 text-[10px] font-black px-2 py-0.5 rounded shadow-sm w-max">
+                            <i class="fas fa-tags ml-1"></i>بدلاً من <del class="text-slate-400 font-bold">${c.discount}</del>
+                        </span>` : ''}
+                        <span class="text-amber-600 font-extrabold text-sm">${c.fee}</span>
+                    </div>
+                    <div class="flex gap-2 mb-0.5">
+                        <button onclick="openLandingPage('${escapeHTML(c.title)}')" class="bg-slate-100 hover:bg-slate-200 text-[#0B1F4D] text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 transition cursor-pointer">التفاصيل</button>
+                        <button onclick="selectCourseDirectly('${escapeHTML(c.title)}')" class="bg-[#0B1F4D] hover:bg-[#132F6B] text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md transition cursor-pointer">سجل الآن</button>
                     </div>
                 </div>
             </div>
@@ -319,17 +329,16 @@ function renderCourses(courses) {
         if(adminCoursesList) {
             adminCoursesList.insertAdjacentHTML('beforeend', `
             <div class="flex justify-between items-center p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs">
-                <span class="font-bold text-[#0B1F4D] truncate w-1/3">${c.title}</span>
+                <span class="font-bold text-[#0B1F4D] truncate w-1/3">${escapeHTML(c.title)}</span>
                 <div class="flex gap-1">
-                    <button onclick="openDetailsModal('${c.title}', event)" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded shadow-sm transition">التفاصيل</button>
-                   <button onclick="openEditCourseModal('${c.id}', '${c.title}', '${c.trainer}', '${c.duration}', '${c.fee}', '${c.category}', '${c.discount || ''}')">تعديل</button>
+                    <button onclick="openDetailsModal('${escapeHTML(c.title)}', event)" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded shadow-sm transition">التفاصيل</button>
+                    <button onclick="openEditCourseModal('${c.id}', '${c.title.replace(/'/g, "\\'")}', '${c.trainer}', '${c.duration}', '${c.fee}', '${c.category}', '${c.discount || ''}')" class="bg-emerald-600 text-white px-2 py-1 rounded shadow-sm">تعديل</button>
                     <button onclick="deleteCourse('${c.id}')" class="bg-rose-500 text-white px-2 py-1 rounded shadow-sm">حذف</button>
                 </div>
             </div>`);
         }
     });
 }
-
 function filterCourses(category) {
     document.querySelectorAll('#courses-list-container > div').forEach(function(card) {
         card.style.display = (category === 'all' || card.getAttribute('data-category') === category) ? 'flex' : 'none';
