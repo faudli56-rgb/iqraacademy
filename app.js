@@ -279,16 +279,21 @@ function renderCourses(courses) {
                     <p class="text-xs text-slate-400 mt-0.5"><i class="fas fa-clock ml-1.5 text-slate-400"></i> المدة: ${c.duration || '36 ساعة تدريبية'}</p>
                 </div>
                 <div class="flex justify-between items-end pt-4 border-t border-slate-50 mt-auto">
-                    <div class="flex flex-col gap-1.5">
+                    <div class="flex flex-col gap-2 max-w-[60%] w-full">
                         ${c.discount && c.discount.trim() !== '' ? `
-                        <span class="bg-rose-50 border border-rose-100 text-rose-600 text-[10px] font-black px-2 py-0.5 rounded shadow-sm w-max">
-                            <i class="fas fa-tags ml-1"></i>بدلاً من <del class="text-slate-400 font-bold">${c.discount}</del>
-                        </span>` : ''}
-                        <span class="text-amber-600 font-extrabold text-sm">${c.fee}</span>
+                        <div>
+                            <span class="block text-[9px] text-rose-500 font-black mb-0.5">السعر قبل الخصم:</span>
+                            <del class="block text-rose-600 font-bold text-[10px] bg-rose-50 px-2 py-1.5 rounded-lg border border-rose-100 leading-snug break-words">${c.discount}</del>
+                        </div>
+                        ` : ''}
+                        <div>
+                            <span class="block text-[9px] text-emerald-600 font-black mb-0.5">${c.discount && c.discount.trim() !== '' ? 'السعر بعد الخصم:' : 'رسوم الدورة:'}</span>
+                            <span class="block text-emerald-700 font-extrabold text-[11px] bg-emerald-50 px-2 py-1.5 rounded-lg border border-emerald-100 leading-snug break-words">${c.fee}</span>
+                        </div>
                     </div>
-                    <div class="flex gap-2 mb-0.5">
-                        <button onclick="openLandingPage('${escapeHTML(c.title)}')" class="bg-slate-100 hover:bg-slate-200 text-[#0B1F4D] text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 transition cursor-pointer">التفاصيل</button>
-                        <button onclick="selectCourseDirectly('${escapeHTML(c.title)}')" class="bg-[#0B1F4D] hover:bg-[#132F6B] text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md transition cursor-pointer">سجل الآن</button>
+                    <div class="flex gap-1.5">
+                        <button onclick="openLandingPage('${escapeHTML(c.title)}')" class="bg-slate-100 hover:bg-slate-200 text-[#0B1F4D] text-[10px] font-bold px-2.5 py-2 rounded-lg border border-slate-200 transition cursor-pointer">التفاصيل</button>
+                        <button onclick="selectCourseDirectly('${escapeHTML(c.title)}')" class="bg-[#0B1F4D] hover:bg-[#132F6B] text-white text-[10px] font-bold px-2.5 py-2 rounded-lg shadow-md transition cursor-pointer">سجل الآن</button>
                     </div>
                 </div>
             </div>
@@ -309,16 +314,21 @@ function renderCourses(courses) {
                     <p class="text-xs text-slate-400 mt-0.5"><i class="fas fa-clock ml-1.5 text-slate-400"></i> المدة: ${c.duration || '36 ساعة تدريبية'}</p>
                 </div>
                 <div class="flex justify-between items-end pt-4 border-t border-slate-50 mt-auto">
-                    <div class="flex flex-col gap-1.5">
+                    <div class="flex flex-col gap-2 max-w-[60%] w-full">
                         ${c.discount && c.discount.trim() !== '' ? `
-                        <span class="bg-rose-50 border border-rose-100 text-rose-600 text-[10px] font-black px-2 py-0.5 rounded shadow-sm w-max">
-                            <i class="fas fa-tags ml-1"></i>بدلاً من <del class="text-slate-400 font-bold">${c.discount}</del>
-                        </span>` : ''}
-                        <span class="text-amber-600 font-extrabold text-sm">${c.fee}</span>
+                        <div>
+                            <span class="block text-[9px] text-rose-500 font-black mb-0.5">السعر قبل الخصم:</span>
+                            <del class="block text-rose-600 font-bold text-[10px] bg-rose-50 px-2 py-1.5 rounded-lg border border-rose-100 leading-snug break-words">${c.discount}</del>
+                        </div>
+                        ` : ''}
+                        <div>
+                            <span class="block text-[9px] text-emerald-600 font-black mb-0.5">${c.discount && c.discount.trim() !== '' ? 'السعر بعد الخصم:' : 'رسوم الدورة:'}</span>
+                            <span class="block text-emerald-700 font-extrabold text-[11px] bg-emerald-50 px-2 py-1.5 rounded-lg border border-emerald-100 leading-snug break-words">${c.fee}</span>
+                        </div>
                     </div>
-                    <div class="flex gap-2 mb-0.5">
-                        <button onclick="openLandingPage('${escapeHTML(c.title)}')" class="bg-slate-100 hover:bg-slate-200 text-[#0B1F4D] text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 transition cursor-pointer">التفاصيل</button>
-                        <button onclick="selectCourseDirectly('${escapeHTML(c.title)}')" class="bg-[#0B1F4D] hover:bg-[#132F6B] text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md transition cursor-pointer">سجل الآن</button>
+                    <div class="flex gap-1.5">
+                        <button onclick="openLandingPage('${escapeHTML(c.title)}')" class="bg-slate-100 hover:bg-slate-200 text-[#0B1F4D] text-[10px] font-bold px-2.5 py-2 rounded-lg border border-slate-200 transition cursor-pointer">التفاصيل</button>
+                        <button onclick="selectCourseDirectly('${escapeHTML(c.title)}')" class="bg-[#0B1F4D] hover:bg-[#132F6B] text-white text-[10px] font-bold px-2.5 py-2 rounded-lg shadow-md transition cursor-pointer">سجل الآن</button>
                     </div>
                 </div>
             </div>
