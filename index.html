@@ -143,12 +143,13 @@
             </div>
         </div>
         
-        <div id="mobile-menu" class="hidden md:hidden bg-[#071432] border-t border-[#132F6B] px-6 py-4 space-y-3 shadow-2xl relative z-40">
-            <a onclick="navigateTo('home'); toggleMobileMenu()" class="block text-slate-200 hover:text-[#D4A017] py-2 border-b border-slate-800/40 font-semibold cursor-pointer"><i class="fas fa-home ml-3 text-[#D4A017]"></i>الرئيسية</a>
-            <a onclick="navigateTo('courses'); toggleMobileMenu()" class="block text-slate-200 hover:text-[#D4A017] py-2 border-b border-slate-800/40 font-semibold cursor-pointer"><i class="fas fa-book-open ml-3 text-[#D4A017]"></i>الدورات</a>
-            <a onclick="navigateTo('b2b'); toggleMobileMenu()" class="block text-slate-200 hover:text-[#D4A017] py-2 border-b border-slate-800/40 font-semibold cursor-pointer"><i class="fas fa-briefcase ml-3 text-[#D4A017]"></i>خدمات الشركات والمنظمات</a>
-            <a onclick="navigateTo('news'); toggleMobileMenu()" class="block text-slate-200 hover:text-[#D4A017] py-2 border-b border-slate-800/40 font-semibold cursor-pointer"><i class="fas fa-newspaper ml-3 text-[#D4A017]"></i>الأخبار</a>
-            <a onclick="navigateTo('verification'); toggleMobileMenu()" class="block text-slate-200 hover:text-[#D4A017] py-2 border-b border-slate-800/40 font-semibold cursor-pointer"><i class="fas fa-award ml-3 text-[#D4A017]"></i>فحص الشهادات</a>
+      <div id="mobile-menu" class="hidden md:hidden bg-[#071432] border-t border-[#132F6B] px-6 py-4 space-y-3 shadow-2xl relative z-40">
+    <a onclick="navigateTo('home'); toggleMobileMenu()" class="block text-slate-200 hover:text-[#D4A017] py-2 border-b border-slate-800/40 font-semibold cursor-pointer"><i class="fas fa-home ml-3 text-[#D4A017]"></i>الرئيسية</a>
+    
+    <a id="btn-courses-mob" onclick="navigateTo('courses'); toggleMobileMenu()" class="block text-slate-200 hover:text-[#D4A017] py-2 border-b border-slate-800/40 font-semibold cursor-pointer"><i class="fas fa-book-open ml-3 text-[#D4A017]"></i>الدورات</a>
+    <a id="btn-b2b-mob" onclick="navigateTo('b2b'); toggleMobileMenu()" class="block text-slate-200 hover:text-[#D4A017] py-2 border-b border-slate-800/40 font-semibold cursor-pointer"><i class="fas fa-briefcase ml-3 text-[#D4A017]"></i>خدمات الشركات والمنظمات</a>
+    <a id="btn-verification-mob" onclick="navigateTo('verification'); toggleMobileMenu()" class="block text-slate-200 hover:text-[#D4A017] py-2 border-b border-slate-800/40 font-semibold cursor-pointer"><i class="fas fa-award ml-3 text-[#D4A017]"></i>فحص الشهادات</a>
+</div>
             <li><a onclick="startOnboardingTour()" class="hover:text-[#D4A017] cursor-pointer transition text-emerald-400 font-bold"><i class="fas fa-info-circle ml-1"></i> جولة تعليمية بالموقع</a></li>
             <a onclick="navigateTo('contact'); toggleMobileMenu()" class="block text-slate-200 hover:text-[#D4A017] py-2 border-b border-slate-800/40 font-semibold cursor-pointer"><i class="fas fa-envelope ml-3 text-[#D4A017]"></i>تواصل معنا</a>
             <a onclick="openLoginModal(); toggleMobileMenu()" class="block text-emerald-400 font-bold py-2 cursor-pointer"><i class="fas fa-sign-in-alt ml-3 text-emerald-500"></i>دخول النظام</a>
