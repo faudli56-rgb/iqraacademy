@@ -625,9 +625,6 @@ async function handleLoginSubmit(e) {
             }
 
             if(res.role !== 'admin') {
-                 var visitorLogsDiv = document.getElementById('admin-only-visitor-logs');
-            if(visitorLogsDiv) visitorLogsDiv.classList.remove('hidden');
-            loadVisitorLogs(); // استدعاء الدالة لجلب البيانات
                 document.getElementById('tab-btn-content').style.display = 'none';
                 document.getElementById('tab-btn-settings').style.display = 'none';
                 if(document.getElementById('tab-btn-ads-news')) {
@@ -649,6 +646,9 @@ async function handleLoginSubmit(e) {
                 }
                 document.getElementById('tab-title-users').innerText = "إدارة المتدربين";
             }
+               var visitorLogsDiv = document.getElementById('admin-only-visitor-logs');
+            if(visitorLogsDiv) visitorLogsDiv.classList.remove('hidden');
+            loadVisitorLogs(); // استدعاء الدالة لجلب البيانات
             
             loadDashboardData(res.role, res.marketerCode, res.name);
             loadStatsData(res.role, res.marketerCode, res.name);
