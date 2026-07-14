@@ -19,21 +19,30 @@ async function callAPI(action, data = {}) {
     try {
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
-            redirect: 'follow', // 👈 إضافة حاسمة لتتبع توجيه جوجل
+            redirect: 'follow', 
             headers: {
                 'Content-Type': 'text/plain;charset=utf-8',
             },
             body: JSON.stringify({ action, data })
         });
         
-        const result = await response.json();
-        return result;
+        // استلام الرد كنص أولاً لمنع أخطاء الترجمة
+        const text = await response.text();
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error('API Parse Error:', text);
+            return { 
+                success: false, 
+                message: 'استجابة غير صالحة من السيرفر. قد يحتاج سكريبت جوجل إلى تجديد الصلاحيات.' 
+            };
+        }
         
     } catch (error) {
         console.error('API Error:', error);
         return { 
             success: false, 
-            error: error.message || 'فشل الاتصال بالخادم' 
+            message: error.message || 'فشل الاتصال بالخادم' 
         };
     }
 }
