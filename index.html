@@ -339,7 +339,15 @@
                     <div id="successMessage" class="hidden mt-4 p-5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-center space-y-3 shadow-inner">
                         <div class="text-3xl"><i class="fas fa-check-circle text-emerald-500"></i></div>
                         <div class="font-black text-lg">تم تسجيلك بنجاح!</div>
-                        <div class="text-sm">رقم الطلب الخاص بك للرجوع إليه هو: <span id="displayOrderID" class="font-black text-[#0B1F4D] bg-white px-3 py-1 rounded-lg shadow-sm"></span></div>
+                       <div class="text-sm mt-3 mb-4">
+    <span class="block mb-2 text-slate-600 font-bold">رقم الطلب الخاص بك للرجوع إليه هو:</span>
+    <div class="flex items-center justify-center gap-2">
+        <span id="displayOrderID" class="font-black text-[#0B1F4D] bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm tracking-widest"></span>
+        <button type="button" onclick="copyOrderID(this)" class="bg-white hover:bg-slate-50 text-slate-600 px-3 py-2 rounded-xl text-xs transition border border-slate-200 shadow-sm cursor-pointer">
+            <i class="fas fa-copy"></i> نسخ
+        </button>
+    </div>
+</div>
                         <button type="button" onclick="goToPaymentDirectly()" class="w-full bg-[#D4A017] hover:bg-[#b88614] text-[#0B1F4D] px-6 py-3 rounded-xl inline-flex items-center justify-center gap-2 font-black shadow-md transition mt-4 cursor-pointer text-sm">
                             <i class="fas fa-credit-card text-lg"></i> تسديد رسوم الدورة الآن
                         </button>
