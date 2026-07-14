@@ -2241,3 +2241,22 @@ async function loadVisitorLogs() {
         tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-rose-500">خطأ في جلب بيانات التتبع</td></tr>';
     }
 }
+// ==========================================
+// منع الخروج العشوائي من الجوال (عند ضغط زر الرجوع)
+// ==========================================
+// 1. إضافة حالة وهمية للمتصفح بمجرد الدخول
+window.history.pushState({ noBackExitsApp: true }, '');
+
+// 2. مراقبة ضغط زر الرجوع في الجوال
+window.addEventListener('popstate', function(event) {
+    // إظهار رسالة التأكيد
+    var leave = confirm("هل أنت متأكد أنك تريد الخروج من الأكاديمية؟");
+    
+    if (leave) {
+        // إذا ضغط "موافق" السماح له بالخروج
+        window.history.back();
+    } else {
+        // إذا ضغط "إلغاء" يتم إعادته وتثبيته في الموقع
+        window.history.pushState({ noBackExitsApp: true }, '');
+    }
+});
