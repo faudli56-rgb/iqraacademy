@@ -73,7 +73,6 @@ function initializeWebsiteLayout() {
             var welcomePopup = document.getElementById('welcome-popup');
             if(welcomePopup) {
                 welcomePopup.classList.remove('hidden');
-                // حفظ إشارة في المتصفح لكي لا تزعجه بالتحديث القادم
                 localStorage.setItem('welcome_popup_shown', 'true');
             }
         }, 6000);
