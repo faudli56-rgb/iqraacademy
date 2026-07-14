@@ -79,9 +79,6 @@ function initializeWebsiteLayout() {
         }, 6000);
     }
 }
-
-function toggleMobileMenu() {
-
 function toggleMobileMenu() {
     var menu = document.getElementById('mobile-menu');
     var icon = document.getElementById('menu-toggle-icon');
