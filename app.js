@@ -60,14 +60,22 @@ function initializeWebsiteLayout() {
         localStorage.setItem('site_views', totalViews); 
     } catch(e) {}
     
-    // الأسطر المسؤولة عن تحميل محتوى الموقع (التي تم حذفها بالخطأ)
     loadCoursesFromServer();
     loadNewsFromServer();
     loadTestimonialsFromServer();
     loadRealAdsFromServer();
     loadPaymentMethods();
+
+    // 💡 الإضافة الجديدة: تسجيل الزائر بمجرد فتحه للموقع لأول مرة!
+    var sessionId = sessionStorage.getItem('visitor_session');
+    if (!sessionId) {
+        sessionId = 'زائر-' + Math.floor(Math.random() * 9999);
+        sessionStorage.setItem('visitor_session', sessionId);
+    }
+    if(typeof logVisitorActivity === 'function') {
+        logVisitorActivity('الرئيسية (دخول مباشر)', sessionId);
+    }
     
-    // التحقق مما إذا كانت النافذة قد ظهرت مسبقاً لهذا الزائر
     if (!localStorage.getItem('welcome_popup_shown')) {
         setTimeout(function() { 
             var welcomePopup = document.getElementById('welcome-popup');
@@ -78,7 +86,6 @@ function initializeWebsiteLayout() {
         }, 6000);
     }
 }
-
 function toggleMobileMenu() {
     var menu = document.getElementById('mobile-menu');
     var icon = document.getElementById('menu-toggle-icon');
@@ -646,10 +653,11 @@ async function handleLoginSubmit(e) {
                 }
                 document.getElementById('tab-title-users').innerText = "إدارة المتدربين";
             }
-               var visitorLogsDiv = document.getElementById('admin-only-visitor-logs');
-            if(visitorLogsDiv) visitorLogsDiv.classList.remove('hidden');
-            loadVisitorLogs(); // استدعاء الدالة لجلب البيانات
-            
+             // 💡 إظهار سجل الزوار للمدير فقط
+                var visitorLogsDiv = document.getElementById('admin-only-visitor-logs');
+                if(visitorLogsDiv) visitorLogsDiv.classList.remove('hidden');
+                loadVisitorLogs(); 
+            }
             loadDashboardData(res.role, res.marketerCode, res.name);
             loadStatsData(res.role, res.marketerCode, res.name);
             closeLoginModal();
@@ -886,6 +894,11 @@ function switchAdminTab(tabId, btnElement) {
     document.getElementById(tabId).classList.add('block');
     btnElement.classList.remove('bg-transparent', 'text-slate-600');
     btnElement.classList.add('bg-[#0B1F4D]', 'text-white', 'shadow');
+
+    // 💡 الإضافة المفقودة: تحديث السجل فوراً عند النقر على الإحصائيات
+    if(tabId === 'tab-stats' && typeof loadVisitorLogs === 'function') {
+        loadVisitorLogs();
+    }
 }
 
 // ==========================================
@@ -2223,7 +2236,8 @@ async function loadVisitorLogs() {
     
     try {
         const res = await fetchVisitorLogs();
-        if(res && res.success && res.logs.length > 0) {
+        // 💡 التعديل هنا: إضافة حماية (res.logs) لمنع توقف الكود
+        if(res && res.success && res.logs && res.logs.length > 0) {
             tbody.innerHTML = '';
             res.logs.forEach(function(log) {
                 tbody.insertAdjacentHTML('beforeend', `
