@@ -657,7 +657,7 @@ async function handleLoginSubmit(e) {
                 var visitorLogsDiv = document.getElementById('admin-only-visitor-logs');
                 if(visitorLogsDiv) visitorLogsDiv.classList.remove('hidden');
                 loadVisitorLogs(); 
-            }
+    
             loadDashboardData(res.role, res.marketerCode, res.name);
             loadStatsData(res.role, res.marketerCode, res.name);
             closeLoginModal();
