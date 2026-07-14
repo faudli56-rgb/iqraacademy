@@ -54,17 +54,33 @@ function escapeHTML(str) {
 // دوال التهيئة والتنقل
 // ==========================================
 
-// التحقق مما إذا كانت النافذة قد ظهرت مسبقاً لهذا الزائر
+function initializeWebsiteLayout() {
+    try { 
+        totalViews += 1;
+        localStorage.setItem('site_views', totalViews); 
+    } catch(e) {}
+    
+    // الأسطر المسؤولة عن تحميل محتوى الموقع (التي تم حذفها بالخطأ)
+    loadCoursesFromServer();
+    loadNewsFromServer();
+    loadTestimonialsFromServer();
+    loadRealAdsFromServer();
+    loadPaymentMethods();
+    
+    // التحقق مما إذا كانت النافذة قد ظهرت مسبقاً لهذا الزائر
     if (!localStorage.getItem('welcome_popup_shown')) {
         setTimeout(function() { 
             var welcomePopup = document.getElementById('welcome-popup');
             if(welcomePopup) {
                 welcomePopup.classList.remove('hidden');
-                // حفظ إشارة في المتصفح بأن النافذة ظهرت لكي لا تزعجه بالتحديث القادم
+                // حفظ إشارة في المتصفح لكي لا تزعجه بالتحديث القادم
                 localStorage.setItem('welcome_popup_shown', 'true');
             }
         }, 6000);
     }
+}
+
+function toggleMobileMenu() {
 
 function toggleMobileMenu() {
     var menu = document.getElementById('mobile-menu');
