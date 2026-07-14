@@ -54,23 +54,17 @@ function escapeHTML(str) {
 // دوال التهيئة والتنقل
 // ==========================================
 
-function initializeWebsiteLayout() {
-    try { 
-        totalViews += 1;
-        localStorage.setItem('site_views', totalViews); 
-    } catch(e) {}
-    
-    loadCoursesFromServer();
-    loadNewsFromServer();
-    loadTestimonialsFromServer();
-    loadRealAdsFromServer();
-    loadPaymentMethods();
-    
-    setTimeout(function() { 
-        var welcomePopup = document.getElementById('welcome-popup');
-        if(welcomePopup) welcomePopup.classList.remove('hidden'); 
-    }, 6000);
-}
+// التحقق مما إذا كانت النافذة قد ظهرت مسبقاً لهذا الزائر
+    if (!localStorage.getItem('welcome_popup_shown')) {
+        setTimeout(function() { 
+            var welcomePopup = document.getElementById('welcome-popup');
+            if(welcomePopup) {
+                welcomePopup.classList.remove('hidden');
+                // حفظ إشارة في المتصفح بأن النافذة ظهرت لكي لا تزعجه بالتحديث القادم
+                localStorage.setItem('welcome_popup_shown', 'true');
+            }
+        }, 6000);
+    }
 
 function toggleMobileMenu() {
     var menu = document.getElementById('mobile-menu');
@@ -2181,3 +2175,15 @@ function registerAnotherCourse() {
     // 5. توجيه الطالب فوراً إلى قسم الدورات التدريبية
     navigateTo('courses');
 }
+// ==========================================
+// رسالة التنبيه عند محاولة إغلاق الموقع أو التراجع
+// ==========================================
+window.addEventListener('beforeunload', function (e) {
+    // إلغاء الحدث الافتراضي
+    e.preventDefault();
+    
+    // هذا السطر إجباري للمتصفحات الحديثة لكي تظهر رسالة التنبيه الافتراضية
+    e.returnValue = ''; 
+    
+    return '';
+});
