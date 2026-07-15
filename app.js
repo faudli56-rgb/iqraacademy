@@ -522,7 +522,21 @@ function handleContactSubmit(e) {
     setTimeout(function() { btn.innerText = "إرسال الرسالة الحين"; e.target.reset(); }, 3000);
 }
 
+// ==========================================
+// دوال التواصل وطلب عروض الشركات (B2B)
+// ==========================================
 function requestB2BQuote(offerName, offerType) {
+    // 💡 إضافة كود التتبع: لتسجيل ضغطة الزائر في رادار وإحصائيات المدير
+    var sessionId = sessionStorage.getItem('visitor_session');
+    if (!sessionId) {
+        sessionId = 'زائر-' + Math.floor(Math.random() * 9999);
+        sessionStorage.setItem('visitor_session', sessionId);
+    }
+    if (typeof logVisitorActivity === 'function') {
+        logVisitorActivity('خدمات الشركات (طلب تواصل)', sessionId);
+    }
+    // --------------------------------------------------------
+
     try {
         var message = "";
         
@@ -541,7 +555,6 @@ function requestB2BQuote(offerName, offerType) {
         console.error("خطأ في فتح الواتساب:", e);
     }
 }
-
 // ==========================================
 // دوال التحقق من الشهادات
 // ==========================================
@@ -591,13 +604,19 @@ function renderVerificationResult(result) {
 // ==========================================
 
 function openLoginModal() { 
-    document.getElementById('loginModal').classList.remove('hidden'); 
+    let loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+        loginModal.classList.remove('hidden'); // إزالة الإخفاء
+        loginModal.classList.add('flex');      // إضافة الظهور ليتم عرضها بشكل صحيح
+    }
 }
-
 function closeLoginModal() { 
-    document.getElementById('loginModal').classList.add('hidden'); 
+    let loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+        loginModal.classList.add('hidden');    // إعادة الإخفاء
+        loginModal.classList.remove('flex');   // إزالة الظهور حتى لا تبقى عالقة كشاشة شفافة
+    }
 }
-
 async function handleLoginSubmit(e) {
     e.preventDefault();
     var btn = document.getElementById('loginSubmitBtn');
@@ -2220,55 +2239,62 @@ window.addEventListener('beforeunload', function (e) {
     return '';
 });
 // ==========================================
-// جلب سجل الزوار للمدير
+// جلب سجل الزوار للمدير (نظام المصفوفة ✅ ❌)
 // ==========================================
 async function loadVisitorLogs() {
     var tbody = document.getElementById('visitor-logs-tbody');
     if(!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-slate-400">جاري جلب بيانات التتبع الحية...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-slate-400">جاري مسح الرادار وجلب البيانات...</td></tr>';
     
     try {
         const res = await fetchVisitorLogs();
-        console.log("استجابة سيرفر الزوار:", res); // لفحص البيانات في الكونسول
         
-        // 💡 الإصلاح: التقاط البيانات سواء كان اسمها logs أو data
-        let logsArray = res.logs || res.data || [];
+        if (res && res.error) {
+            tbody.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-rose-600 font-black text-sm">خطأ: ' + res.error + '</td></tr>';
+            return;
+        }
         
-        if(res && res.success && logsArray.length > 0) {
-            tbody.innerHTML = '';
-            logsArray.forEach(function(log) {
-                tbody.insertAdjacentHTML('beforeend', `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-3 text-slate-500 font-bold dir-ltr text-right">${log.date || '-'}</td>
-                        <td class="p-3 text-[#D4A017] font-black">${log.session || '-'}</td>
-                        <td class="p-3 text-[#0B1F4D] font-bold">${log.page || '-'}</td>
-                    </tr>
-                `);
-            });
-        } else {
-            tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-slate-400">لا توجد زيارات مسجلة حتى الآن</td></tr>';
+        if(res && res.success) {
+            // 1. تحديث الإحصائيات العددية المستمرة
+            if(document.getElementById('stat-total-visitors')) document.getElementById('stat-total-visitors').innerText = res.stats.totalVisitors || 0;
+            if(document.getElementById('stat-total-b2b')) document.getElementById('stat-total-b2b').innerText = res.stats.b2bRequests || 0;
+            
+            // جلب عدد المسجلين (الدورات) من بطاقة الإحصائيات الرئيسية
+            var totalStudentsCard = document.querySelector('#tab-stats .grid .text-2xl');
+            if(document.getElementById('stat-total-regs') && totalStudentsCard) {
+                 document.getElementById('stat-total-regs').innerText = totalStudentsCard.innerText;
+            }
+
+            // 2. رسم جدول الزوار (الصح والخطأ)
+            let logsArray = res.logs || [];
+            if(logsArray.length > 0) {
+                tbody.innerHTML = '';
+                logsArray.forEach(function(log) {
+                    // دالة ذكية تفحص هل زار الصفحة أم لا وتضع الأيقونة المناسبة
+                    const checkPage = (pageName) => {
+                        let visited = Object.keys(log.pages).some(p => p.includes(pageName));
+                        return visited 
+                            ? '<i class="fas fa-check-circle text-emerald-500 text-lg shadow-sm rounded-full"></i>' 
+                            : '<i class="fas fa-minus text-slate-200"></i>';
+                    };
+
+                    tbody.insertAdjacentHTML('beforeend', `
+                        <tr class="hover:bg-slate-50 transition border-b border-slate-50">
+                            <td class="p-3 text-[#D4A017] font-black">${log.session || '-'}</td>
+                            <td class="p-3 text-slate-500 font-bold dir-ltr text-right text-[10px]">${log.lastDate || '-'}</td>
+                            <td class="p-3 text-center bg-slate-50/50">${checkPage('الرئيسية')}</td>
+                            <td class="p-3 text-center">${checkPage('الدورات')}</td>
+                            <td class="p-3 text-center bg-slate-50/50">${checkPage('الشركات')}</td>
+                            <td class="p-3 text-center">${checkPage('الأخبار')}</td>
+                            <td class="p-3 text-center bg-slate-50/50">${checkPage('فحص')}</td>
+                        </tr>
+                    `);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-slate-400 font-bold">الرادار فارغ حالياً</td></tr>';
+            }
         }
     } catch(e) {
-        console.error("خطأ في جلب السجل:", e);
-        tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-rose-500">خطأ في الاتصال بسيرفر التتبع</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-rose-600 font-black">خطأ في الاتصال</td></tr>';
     }
 }
-// ==========================================
-// منع الخروج العشوائي من الجوال (عند ضغط زر الرجوع)
-// ==========================================
-// 1. إضافة حالة وهمية للمتصفح بمجرد الدخول
-window.history.pushState({ noBackExitsApp: true }, '');
-
-// 2. مراقبة ضغط زر الرجوع في الجوال
-window.addEventListener('popstate', function(event) {
-    // إظهار رسالة التأكيد
-    var leave = confirm("هل أنت متأكد أنك تريد الخروج من الأكاديمية؟");
-    
-    if (leave) {
-        // إذا ضغط "موافق" السماح له بالخروج
-        window.history.back();
-    } else {
-        // إذا ضغط "إلغاء" يتم إعادته وتثبيته في الموقع
-        window.history.pushState({ noBackExitsApp: true }, '');
-    }
-});
