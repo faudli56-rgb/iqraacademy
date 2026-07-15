@@ -15,70 +15,25 @@ const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbx51syLRrRu0JrDhhg
 // الدالة الأساسية للاتصال بالـ API
 // ==========================================
 
-async function callAPI(action, data = {}, timeout = 30000) {
-    // 1. إنشاء AbortController لإدارة المهلة
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-    
+async function callAPI(action, data = {}) {
     try {
-        // 2. إعداد الطلب مع المهلة
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
-            redirect: 'follow',
+            redirect: 'follow', // 👈 إضافة حاسمة لتتبع توجيه جوجل
             headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
+                'Content-Type': 'text/plain;charset=utf-8',
             },
-            body: JSON.stringify({ action, data }),
-            signal: controller.signal
+            body: JSON.stringify({ action, data })
         });
         
-        // 3. إلغاء المهلة بعد الاستجابة
-        clearTimeout(timeoutId);
-        
-        // 4. التحقق من حالة الاستجابة
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        // 5. قراءة النص ومن ثم تحويله إلى JSON
-        const text = await response.text();
-        try {
-            if (!text || text.trim() === '') {
-                throw new Error('استجابة فارغة من السيرفر');
-            }
-            return JSON.parse(text);
-        } catch (e) {
-            console.error('API Parse Error:', text);
-            return { 
-                success: false, 
-                message: 'استجابة غير صالحة من السيرفر',
-                rawResponse: text 
-            };
-        }
+        const result = await response.json();
+        return result;
         
     } catch (error) {
-        // 6. معالجة الأخطاء المختلفة
-        clearTimeout(timeoutId);
         console.error('API Error:', error);
-        
-        if (error.name === 'AbortError') {
-            return { 
-                success: false, 
-                message: 'انتهت مهلة الاتصال بالخادم. يرجى المحاولة مرة أخرى.' 
-            };
-        }
-        
-        if (error.message.includes('Failed to fetch')) {
-            return { 
-                success: false, 
-                message: 'لا يمكن الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت.' 
-            };
-        }
-        
         return { 
             success: false, 
-            message: error.message || 'فشل الاتصال بالخادم' 
+            error: error.message || 'فشل الاتصال بالخادم' 
         };
     }
 }
@@ -260,14 +215,4 @@ async function uploadImage(base64Data, fileName) {
 
 async function uploadReceipt(base64Data, fileName) {
     return await callAPI('uploadReceipt', { base64Data, fileName });
-}
-// ==========================================
-// دوال تتبع الزوار (للمدير فقط)
-// ==========================================
-function logVisitorActivity(pageName, sessionId) {
-    // لا نستخدم await لكي لا نؤخر تصفح الزائر، يتم الإرسال في الخلفية
-    callAPI('logVisit', { pageName, sessionId }).catch(e => console.log(e));
-}
-async function fetchVisitorLogs() {
-    return await callAPI('fetchVisitorLogs');
 }
