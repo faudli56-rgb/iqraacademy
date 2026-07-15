@@ -2319,14 +2319,20 @@ function openVirtualRoom(courseName) {
     var container = document.getElementById('jitsi-container');
     var loader = document.getElementById('room-loader');
     
-    // تنظيف القاعة القديمة إن وجدت
+    // 2. تنظيف القاعة القديمة وتفريغ الحاوية تماماً
     if (jitsiApi) {
         jitsiApi.dispose();
         jitsiApi = null;
     }
+    
+    // إزالة أي إطارات iframe متبقية قد تسبب تعارض
+    Array.from(container.children).forEach(child => {
+        if (child.id !== 'room-loader') child.remove();
+    });
+
     if (loader) loader.style.display = 'flex';
 
-    // 2. تأخير نصف ثانية (500ms) حتى يكتمل فتح الصفحة وتتجنب الانهيار (Crash)
+    // 3. زيادة التأخير قليلاً لضمان اكتمال حركة CSS (FadeIn)
     setTimeout(function() {
         var userRole = sessionStorage.getItem('role') || 'student';
         var userName = sessionStorage.getItem('name') || 'متدرب - ' + Math.floor(Math.random() * 1000);
@@ -2339,14 +2345,13 @@ function openVirtualRoom(courseName) {
             height: '100%',
             parentNode: container,
             userInfo: {
-                // إزالة الرموز التعبيرية التي قد تسبب مشاكل في بعض الجوالات
                 displayName: userName + (isModerator ? ' (إدارة)' : '')
             },
             configOverwrite: {
                 startWithAudioMuted: true, 
                 startWithVideoMuted: true, 
-                disableDeepLinking: true, // 🔴 إجبار الجوال على استخدام المتصفح ومنع طلب التطبيق
-                // تم إزالة prejoinPageEnabled لكي يسمح للمتصفح بطلب صلاحية المايك بدون أن يفصل
+                disableDeepLinking: true, 
+                prejoinPageEnabled: false // تخطي صفحة الانتظار للدخول المباشر
             },
             interfaceConfigOverwrite: {
                 SHOW_JITSI_WATERMARK: false,
@@ -2358,7 +2363,6 @@ function openVirtualRoom(courseName) {
             }
         };
 
-        // صلاحيات الإدارة
         if (isModerator) {
             options.interfaceConfigOverwrite.TOOLBAR_BUTTONS.push('mute-everyone', 'security');
         } else {
@@ -2366,19 +2370,28 @@ function openVirtualRoom(courseName) {
             options.configOverwrite.disableRemoteMute = true;
         }
 
-        // 3. بناء القاعة
+        // 4. بناء القاعة
         jitsiApi = new JitsiMeetExternalAPI(domain, options);
 
         // إخفاء اللودر فوراً بعد نجاح الربط
         if(loader) loader.style.display = 'none';
 
-        // 4. حدث الخروج من القاعة (لإظهار نافذة الحضور)
+        // 5. حدث الخروج من القاعة
         jitsiApi.addListener('videoConferenceLeft', function() {
             closeVirtualRoom();
-            if (!isModerator) {
+            if (!isModerator && typeof showAttendancePopup === 'function') {
                 showAttendancePopup(courseName);
             }
         });
 
-    }, 500); // هذا التأخير هو سر استقرار القاعة
+    }, 800); // 800ms تضمن اكتمال الانتقال الشكلي
+}
+
+// دالة إغلاق القاعة لضمان عدم استهلاك موارد المتصفح
+function closeVirtualRoom() {
+    if (jitsiApi) {
+        jitsiApi.dispose();
+        jitsiApi = null;
+    }
+    navigateTo('home');
 }
