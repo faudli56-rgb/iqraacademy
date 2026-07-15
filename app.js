@@ -65,24 +65,16 @@ function initializeWebsiteLayout() {
     loadTestimonialsFromServer();
     loadRealAdsFromServer();
     loadPaymentMethods();
-
-    // 💡 إصلاح: تسجيل الدخول الأولي لحظة فتح الموقع
+    
+    // 💡 الإصلاح: تسجيل الزيارة فور فتح الموقع
     var sessionId = sessionStorage.getItem('visitor_session');
     if (!sessionId) {
         sessionId = 'زائر-' + Math.floor(Math.random() * 9999);
         sessionStorage.setItem('visitor_session', sessionId);
     }
-    if(typeof logVisitorActivity === 'function') {
-        logVisitorActivity('الرئيسية (دخول الموقع)', sessionId);
+    if (typeof logVisitorActivity === 'function') {
+        logVisitorActivity('الرئيسية (دخول مبدئي)', sessionId);
     }
-
-    // 💡 إصلاح: تسجيل الخروج لحظة إغلاق المتصفح أو التبويب
-    window.addEventListener('beforeunload', function() {
-        if(typeof logVisitorActivity === 'function' && sessionId) {
-            // نستخدم sendBeacon لضمان إرسال البيانات حتى أثناء إغلاق الصفحة
-            navigator.sendBeacon('https://script.google.com/macros/s/AKfycbx51syLRrRu0JrDhhgaySviP0hOp0yOhe-ymywoVb_nF2O2Gt2B-2AclzzL6fjRUzTu/exec', JSON.stringify({ action: 'logVisit', data: { pageName: 'خروج من الموقع', sessionId: sessionId } }));
-        }
-    });
     
     if (!localStorage.getItem('welcome_popup_shown')) {
         setTimeout(function() { 
@@ -2237,14 +2229,19 @@ async function loadVisitorLogs() {
     
     try {
         const res = await fetchVisitorLogs();
-        if(res && res.success && res.logs.length > 0) {
+        console.log("استجابة سيرفر الزوار:", res); // لفحص البيانات في الكونسول
+        
+        // 💡 الإصلاح: التقاط البيانات سواء كان اسمها logs أو data
+        let logsArray = res.logs || res.data || [];
+        
+        if(res && res.success && logsArray.length > 0) {
             tbody.innerHTML = '';
-            res.logs.forEach(function(log) {
+            logsArray.forEach(function(log) {
                 tbody.insertAdjacentHTML('beforeend', `
                     <tr class="hover:bg-slate-50 transition">
-                        <td class="p-3 text-slate-500 font-bold dir-ltr text-right">${log.date}</td>
-                        <td class="p-3 text-[#D4A017] font-black">${log.session}</td>
-                        <td class="p-3 text-[#0B1F4D] font-bold">${log.page}</td>
+                        <td class="p-3 text-slate-500 font-bold dir-ltr text-right">${log.date || '-'}</td>
+                        <td class="p-3 text-[#D4A017] font-black">${log.session || '-'}</td>
+                        <td class="p-3 text-[#0B1F4D] font-bold">${log.page || '-'}</td>
                     </tr>
                 `);
             });
@@ -2252,7 +2249,8 @@ async function loadVisitorLogs() {
             tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-slate-400">لا توجد زيارات مسجلة حتى الآن</td></tr>';
         }
     } catch(e) {
-        tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-rose-500">خطأ في جلب بيانات التتبع</td></tr>';
+        console.error("خطأ في جلب السجل:", e);
+        tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-rose-500">خطأ في الاتصال بسيرفر التتبع</td></tr>';
     }
 }
 // ==========================================
