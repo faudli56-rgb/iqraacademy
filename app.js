@@ -66,12 +66,26 @@ function initializeWebsiteLayout() {
     loadRealAdsFromServer();
     loadPaymentMethods();
     
-    setTimeout(function() { 
-        var welcomePopup = document.getElementById('welcome-popup');
-        if(welcomePopup) welcomePopup.classList.remove('hidden'); 
-    }, 6000);
+    // 💡 الإصلاح: تسجيل الزيارة فور فتح الموقع
+    var sessionId = sessionStorage.getItem('visitor_session');
+    if (!sessionId) {
+        sessionId = 'زائر-' + Math.floor(Math.random() * 9999);
+        sessionStorage.setItem('visitor_session', sessionId);
+    }
+    if (typeof logVisitorActivity === 'function') {
+        logVisitorActivity('الرئيسية (دخول مبدئي)', sessionId);
+    }
+    
+    if (!localStorage.getItem('welcome_popup_shown')) {
+        setTimeout(function() { 
+            var welcomePopup = document.getElementById('welcome-popup');
+            if(welcomePopup) {
+                welcomePopup.classList.remove('hidden');
+                localStorage.setItem('welcome_popup_shown', 'true');
+            }
+        }, 6000);
+    }
 }
-
 function toggleMobileMenu() {
     var menu = document.getElementById('mobile-menu');
     var icon = document.getElementById('menu-toggle-icon');
@@ -128,14 +142,24 @@ function navigateTo(pageId) {
     if(document.getElementById('page-' + pageId)) document.getElementById('page-' + pageId).classList.add('active');
     if(document.getElementById('btn-' + pageId)) document.getElementById('btn-' + pageId).classList.add('nav-active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-}
 
-function trackButtonClick(buttonName) {
-    if(buttonName === 'WhatsApp_Float') { 
-        try { 
-            totalClicks += 1; 
-            localStorage.setItem('wa_clicks', totalClicks); 
-        } catch(e) {}
+    // 💡 3. كود تتبع تحركات الزائر (تمت إضافته هنا بنجاح)
+    var sessionId = sessionStorage.getItem('visitor_session');
+    if (!sessionId) {
+        sessionId = 'زائر-' + Math.floor(Math.random() * 9999);
+        sessionStorage.setItem('visitor_session', sessionId);
+    }
+    
+    var pageTitles = {
+        'home': 'الرئيسية', 'courses': 'الدورات التدريبية', 'b2b': 'خدمات الشركات',
+        'news': 'الأخبار', 'verification': 'فحص الشهادات', 'contact': 'تواصل معنا',
+        'register': 'استمارة التسجيل', 'payment': 'بوابة الدفع'
+    };
+    var pageName = pageTitles[pageId] || pageId;
+    
+    // إرسال البيانات للسيرفر في الخلفية
+    if(typeof logVisitorActivity === 'function') {
+        logVisitorActivity(pageName, sessionId);
     }
 }
 
@@ -407,7 +431,14 @@ async function handleNewRegistration(e) {
     submitBtn.innerText = 'جاري التسجيل والربط...';
     submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
 
+    // 💡 توليد رقم عشوائي من 4 خانات (بين 1000 و 9999)
+    var randomNum = Math.floor(1000 + Math.random() * 9000); 
+    // 💡 التنسيق الجديد المطلق: IQR متبوعة بمسافة ثم الرقم (مثال: IQR 1001)
+    var generatedOrderID = "IQR " + randomNum; 
+
+    // تضمين الرقم المولد ضمن البيانات المرسلة للسيرفر
     var studentData = {
+        orderID: generatedOrderID, 
         nameAr: document.getElementById('reg-name-ar') ? document.getElementById('reg-name-ar').value : '',
         nameEn: document.getElementById('reg-name-en') ? document.getElementById('reg-name-en').value : '',
         whatsapp: document.getElementById('reg-whatsapp') ? document.getElementById('reg-whatsapp').value : '',
@@ -435,7 +466,8 @@ async function handleNewRegistration(e) {
                 successDiv.classList.remove('hidden');
                 successDiv.style.display = 'block';
                 if(document.getElementById('displayOrderID')) {
-                    document.getElementById('displayOrderID').innerText = res.orderID;
+                    // عرض الرقم بالتنسيق الجديد IQR 1001
+                    document.getElementById('displayOrderID').innerText = generatedOrderID;
                 }
             }
             
@@ -444,19 +476,18 @@ async function handleNewRegistration(e) {
                 window.open("https://whatsapp.com/channel/0029VbCDK6M4IBhBR3jvVY0Y", "_blank"); 
             }, 3000);
         } else {
-           showToast("❌ خطأ أثناء التسجيل: " + (res ? res.error : "غير معروف"));
+           showToast("❌ خطأ أثناء التسجيل: " + (res ? res.error : "غير معروف"), true);
             submitBtn.disabled = false; 
             submitBtn.innerText = originalText; 
             submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
         }
     } catch(err) {
-        showToast("❌ خطأ اتصال بالسيرفر: " + err); 
+        showToast("❌ خطأ اتصال بالسيرفر: " + err, true); 
         submitBtn.disabled = false; 
         submitBtn.innerText = originalText; 
         submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
     }
 }
-
 function searchNews() {
     var term = document.getElementById('news-search').value.toLowerCase();
     var cards = document.querySelectorAll('#news-list-container > div');
@@ -600,34 +631,37 @@ async function handleLoginSubmit(e) {
                 document.getElementById('marketer-link-box').classList.add('hidden');
             }
 
+            // --- التحكم بالصلاحيات وإظهار/إخفاء سجل الزوار ---
             if(res.role !== 'admin') {
                 document.getElementById('tab-btn-content').style.display = 'none';
                 document.getElementById('tab-btn-settings').style.display = 'none';
-                if(document.getElementById('tab-btn-ads-news')) {
-                    document.getElementById('tab-btn-ads-news').style.display = 'none';
-                }
-                if(document.getElementById('tab-btn-payments')) {
-                    document.getElementById('tab-btn-payments').style.display = 'none';
-                }
+                if(document.getElementById('tab-btn-ads-news')) document.getElementById('tab-btn-ads-news').style.display = 'none';
+                if(document.getElementById('tab-btn-payments')) document.getElementById('tab-btn-payments').style.display = 'none';
                 document.getElementById('tab-title-users').innerText = "طلابي المسجلين";
                 switchAdminTab('tab-stats', document.getElementById('tab-btn-stats'));
+                
+                // إخفاء سجل الزوار كلياً عن غير المدير
+                var visitorLogsDiv = document.getElementById('admin-only-visitor-logs');
+                if(visitorLogsDiv) visitorLogsDiv.classList.add('hidden');
+
             } else {
                 document.getElementById('tab-btn-content').style.display = 'block';
                 document.getElementById('tab-btn-settings').style.display = 'block';
-                if(document.getElementById('tab-btn-ads-news')) {
-                    document.getElementById('tab-btn-ads-news').style.display = 'block';
-                }
-                if(document.getElementById('tab-btn-payments')) {
-                    document.getElementById('tab-btn-payments').style.display = 'block';
-                }
+                if(document.getElementById('tab-btn-ads-news')) document.getElementById('tab-btn-ads-news').style.display = 'block';
+                if(document.getElementById('tab-btn-payments')) document.getElementById('tab-btn-payments').style.display = 'block';
                 document.getElementById('tab-title-users').innerText = "إدارة المتدربين";
+                
+                // إظهار وتشغيل سجل الزوار لمدير الأكاديمية فقط
+                var visitorLogsDiv = document.getElementById('admin-only-visitor-logs');
+                if(visitorLogsDiv) visitorLogsDiv.classList.remove('hidden');
+                loadVisitorLogs(); 
             }
             
             loadDashboardData(res.role, res.marketerCode, res.name);
             loadStatsData(res.role, res.marketerCode, res.name);
             closeLoginModal();
         } else {
-            alert(res.message);
+            alert(res.message || res.error || "خطأ في بيانات الدخول");
         }
         btn.innerText = "دخول"; 
         btn.disabled = false;
@@ -637,7 +671,6 @@ async function handleLoginSubmit(e) {
         btn.disabled = false;
     }
 }
-
 function logout() {
     sessionStorage.clear();
     document.getElementById('admin-content').style.display = 'none';
@@ -679,15 +712,15 @@ async function loadDashboardData(role, code, name) {
             if (currentStatus === 'جديد' || currentStatus === '') {
                 statusBadge = `<span class="text-blue-600 bg-blue-50 px-2 py-1 rounded">جديد</span>`;
                 actionButtons = `
-                    <button onclick="updateStudentState('${row.orderID}', 'مقبول')" class="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600 m-1">قبول</button>
-                    <button onclick="updateStudentState('${row.orderID}', 'مرفوض')" class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 m-1">رفض</button>
+                    <button onclick="changeStudentStateUI('${row.orderID}', 'مقبول')" class="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600 m-1">قبول</button>
+                    <button onclick="changeStudentStateUI('${row.orderID}', 'مرفوض')" class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 m-1">رفض</button>
                 `;
             } 
             else if (currentStatus === 'مقبول') {
                 statusBadge = `<span class="text-green-600 bg-green-50 px-2 py-1 rounded">مقبول</span>`;
                 actionButtons = `
-                    <button onclick="updateStudentState('${row.orderID}', 'تم تسديد الشهادة')" class="bg-[#D4A017] text-white px-2 py-1 rounded text-xs hover:bg-yellow-600 m-1 shadow-sm">سدد الشهادة</button>
-                    <button onclick="updateStudentState('${row.orderID}', 'لم يتم تسديد الشهادة')" class="bg-gray-500 text-white px-2 py-1 rounded text-xs hover:bg-gray-600 m-1 shadow-sm">لم يسدد</button>
+                    <button onclick="changeStudentStateUI('${row.orderID}', 'تم تسديد الشهادة')" class="bg-[#D4A017] text-white px-2 py-1 rounded text-xs hover:bg-yellow-600 m-1 shadow-sm">سدد الشهادة</button>
+                    <button onclick="changeStudentStateUI('${row.orderID}', 'لم يتم تسديد الشهادة')" class="bg-gray-500 text-white px-2 py-1 rounded text-xs hover:bg-gray-600 m-1 shadow-sm">لم يسدد</button>
                 `;
             } 
             else if (currentStatus === 'تم تسديد الشهادة') {
@@ -697,7 +730,7 @@ async function loadDashboardData(role, code, name) {
             else if (currentStatus === 'لم يتم تسديد الشهادة') {
                 statusBadge = `<span class="text-gray-600 bg-gray-100 px-2 py-1 rounded">لم يسدد</span>`;
                 actionButtons = `
-                    <button onclick="updateStudentState('${row.orderID}', 'تم تسديد الشهادة')" class="bg-[#D4A017] text-white px-2 py-1 rounded text-xs hover:bg-yellow-600 m-1 shadow-sm">تأكيد التسديد</button>
+                    <button onclick="changeStudentStateUI('${row.orderID}', 'تم تسديد الشهادة')" class="bg-[#D4A017] text-white px-2 py-1 rounded text-xs hover:bg-yellow-600 m-1 shadow-sm">تأكيد التسديد</button>
                 `;
             }
             else if (currentStatus === 'مرفوض') {
@@ -1317,13 +1350,14 @@ async function saveCourseDetails(event) {
 // دوال تحديث حالة المتدرب
 // ==========================================
 
-async function updateStudentState(orderId, newStatus) {
+async function changeStudentStateUI(orderId, newStatus) {
     if(!confirm("هل تريد تغيير حالة الطلب إلى: " + newStatus + "؟")) return;
     
     document.body.style.cursor = 'wait';
     
     try {
-        const res = await updateStudentState(orderId, newStatus);
+        // استدعاء دالة API الأصلية لفك التعارض البرمجي
+        const res = await callAPI('updateStudentState', { orderId, newStatus });
         document.body.style.cursor = 'default';
         if(res && res.success) {
             alert("✅ تم تغيير الحالة بنجاح إلى: " + res.newStatus);
@@ -1333,14 +1367,13 @@ async function updateStudentState(orderId, newStatus) {
             var currentName = sessionStorage.getItem('name');
             loadDashboardData(currentRole, currentCode, currentName);
         } else {
-            alert("❌ خطأ: " + res.error);
+            alert("❌ خطأ: " + (res.error || res.message));
         }
     } catch(err) {
         document.body.style.cursor = 'default';
         alert("❌ فشل الاتصال بالخادم: " + err);
     }
 }
-
 // ==========================================
 // دوال نظام المدفوعات
 // ==========================================
@@ -2107,3 +2140,135 @@ function endOnboardingTour() {
     localStorage.setItem('onboarding_completed', 'true');
     showToast('تمت الجولة بنجاح! شكراً لك.');
 }
+// ==========================================
+// دالة نسخ رقم الطلب
+// ==========================================
+function copyOrderID(btnElement) {
+    var orderIDText = document.getElementById('displayOrderID').innerText;
+    if (!orderIDText) return;
+    
+    // إنشاء حقل نصي وهمي لنسخ النص منه
+    var tempInput = document.createElement("input");
+    tempInput.value = orderIDText;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
+    
+    // تغيير شكل الزر لإظهار نجاح النسخ
+    var originalHTML = btnElement.innerHTML;
+    btnElement.innerHTML = '<i class="fas fa-check text-emerald-600"></i> تم';
+    btnElement.classList.add('bg-emerald-50', 'border-emerald-200');
+    
+    // إعادته لشكله الأصلي بعد ثانيتين
+    setTimeout(function() {
+        btnElement.innerHTML = originalHTML;
+        btnElement.classList.remove('bg-emerald-50', 'border-emerald-200');
+    }, 2000);
+}
+// ==========================================
+// دالة التسجيل في دورة أخرى
+// ==========================================
+// ==========================================
+// دالة التسجيل في دورة أخرى
+// ==========================================
+function registerAnotherCourse() {
+    // 1. إخفاء رسالة النجاح
+    var successDiv = document.getElementById('successMessage');
+    if(successDiv) {
+        successDiv.style.display = 'none';
+        successDiv.classList.add('hidden');
+    }
+    
+    // 2. إعادة إظهار عناصر نموذج التسجيل لحالتها الطبيعية
+    var formChildren = document.getElementById('registration-form').children;
+    for (var i = 0; i < formChildren.length; i++) {
+         if (formChildren[i].id !== 'successMessage') { 
+             formChildren[i].style.display = ''; // إزالة الإخفاء
+         }
+    }
+    
+    // 💡 3. إعادة تنشيط زر التسجيل ليعمل من جديد (حل مشكلة التعليق)
+    var submitBtn = document.getElementById('submit-btn');
+    if(submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'تأكيد التسجيل وإصدار رقم الطلب';
+        submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+    }
+    
+    // 4. تصفير جميع الحقول وإخفاء تفاصيل الدورة السابقة
+    document.getElementById('registration-form').reset();
+    var dynamicInfo = document.getElementById('course-dynamic-info');
+    if(dynamicInfo) {
+        dynamicInfo.classList.add('hidden');
+        dynamicInfo.innerHTML = '';
+    }
+    
+    // 5. توجيه الطالب فوراً إلى قسم الدورات التدريبية
+    navigateTo('courses');
+}
+// ==========================================
+// رسالة التنبيه عند محاولة إغلاق الموقع أو التراجع
+// ==========================================
+window.addEventListener('beforeunload', function (e) {
+    // إلغاء الحدث الافتراضي
+    e.preventDefault();
+    
+    // هذا السطر إجباري للمتصفحات الحديثة لكي تظهر رسالة التنبيه الافتراضية
+    e.returnValue = ''; 
+    
+    return '';
+});
+// ==========================================
+// جلب سجل الزوار للمدير
+// ==========================================
+async function loadVisitorLogs() {
+    var tbody = document.getElementById('visitor-logs-tbody');
+    if(!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-slate-400">جاري جلب بيانات التتبع الحية...</td></tr>';
+    
+    try {
+        const res = await fetchVisitorLogs();
+        console.log("استجابة سيرفر الزوار:", res); // لفحص البيانات في الكونسول
+        
+        // 💡 الإصلاح: التقاط البيانات سواء كان اسمها logs أو data
+        let logsArray = res.logs || res.data || [];
+        
+        if(res && res.success && logsArray.length > 0) {
+            tbody.innerHTML = '';
+            logsArray.forEach(function(log) {
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 text-slate-500 font-bold dir-ltr text-right">${log.date || '-'}</td>
+                        <td class="p-3 text-[#D4A017] font-black">${log.session || '-'}</td>
+                        <td class="p-3 text-[#0B1F4D] font-bold">${log.page || '-'}</td>
+                    </tr>
+                `);
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-slate-400">لا توجد زيارات مسجلة حتى الآن</td></tr>';
+        }
+    } catch(e) {
+        console.error("خطأ في جلب السجل:", e);
+        tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-rose-500">خطأ في الاتصال بسيرفر التتبع</td></tr>';
+    }
+}
+// ==========================================
+// منع الخروج العشوائي من الجوال (عند ضغط زر الرجوع)
+// ==========================================
+// 1. إضافة حالة وهمية للمتصفح بمجرد الدخول
+window.history.pushState({ noBackExitsApp: true }, '');
+
+// 2. مراقبة ضغط زر الرجوع في الجوال
+window.addEventListener('popstate', function(event) {
+    // إظهار رسالة التأكيد
+    var leave = confirm("هل أنت متأكد أنك تريد الخروج من الأكاديمية؟");
+    
+    if (leave) {
+        // إذا ضغط "موافق" السماح له بالخروج
+        window.history.back();
+    } else {
+        // إذا ضغط "إلغاء" يتم إعادته وتثبيته في الموقع
+        window.history.pushState({ noBackExitsApp: true }, '');
+    }
+});
