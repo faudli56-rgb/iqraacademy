@@ -1079,7 +1079,7 @@ async function submitCourseEdit() {
             fee: document.getElementById('edit-fee').value,
             discount: document.getElementById('edit-discount').value,
             category: document.getElementById('edit-cat').value,
-            image: base64Img // 💡 تم إضافة سحب الصورة هنا
+            image: base64Img // 💡 السماح بحفظ الصورة المعدلة
         };
         
         try {
@@ -1100,6 +1100,14 @@ async function submitCourseEdit() {
         }
     };
 
+    if (fileInput && fileInput.files.length > 0) {
+        var reader = new FileReader();
+        reader.onload = function(ev) { sendData(ev.target.result); };
+        reader.readAsDataURL(fileInput.files[0]);
+    } else { 
+        sendData(""); 
+    }
+}
     // التحقق مما إذا كان المدير قد اختار صورة جديدة أم لا
     if (fileInput && fileInput.files.length > 0) {
         var reader = new FileReader();
