@@ -232,7 +232,6 @@ function logVisitorActivity(pageName, sessionId) {
     // لا نستخدم await لكي لا نؤخر تصفح الزائر، يتم الإرسال في الخلفية
     callAPI('logVisit', { pageName, sessionId }).catch(e => console.log(e));
 }
-
 async function fetchVisitorLogs() {
     return await callAPI('fetchVisitorLogs');
 }
