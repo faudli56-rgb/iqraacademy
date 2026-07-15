@@ -2279,12 +2279,12 @@ async function loadVisitorLogs() {
             if(logsArray.length > 0) {
                 tbody.innerHTML = '';
                 logsArray.forEach(function(log) {
-                    const checkPage = (pageName) => {
-                        let visited = Object.keys(log.pages).some(p => p.includes(pageName));
-                        return visited 
-                            ? '<i class="fas fa-check-circle text-emerald-500 text-lg shadow-sm rounded-full"></i>' 
-                            : '<i class="fas fa-minus text-slate-200"></i>';
-                    };
+                   const checkPage = (pageName) => {
+    let visited = Object.keys(log.pages).some(p => p.includes(pageName));
+    return visited 
+        ? '<span class="text-emerald-500 text-lg drop-shadow-sm">✅</span>' 
+        : '<span class="text-slate-300 drop-shadow-sm">➖</span>';
+};
 
                     tbody.insertAdjacentHTML('beforeend', `
                         <tr class="hover:bg-slate-50 transition border-b border-slate-50">
