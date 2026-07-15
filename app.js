@@ -1198,61 +1198,169 @@ function renderTestimonialsAdmin(data) {
 // ==========================================
 
 function openLandingPage(courseTitle) {
-    var landingContainer = document.getElementById('landing-page-container');
-    var mainContent = document.getElementById('main-content');
-    var loader = document.getElementById('lp-loader');
-    
-    if(!landingContainer || !mainContent) {
-        alert("تنبيه: واجهة صفحة الهبوط غير موجودة. تأكد من استدعاء CourseLanding في Index.html");
+    // 1. التحقق من صحة العنوان
+    if (!courseTitle || courseTitle.trim() === '') {
+        showToast("عنوان الدورة غير صحيح. يرجى المحاولة مرة أخرى.", true);
         return;
     }
 
-    mainContent.style.display = 'none';
-    landingContainer.classList.remove('hidden');
-    if(loader) loader.classList.remove('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 2. تهيئة المتغيرات والعناصر
+    var landingContainer = document.getElementById('landing-page-container');
+    var mainContent = document.getElementById('main-content');
+    var loader = document.getElementById('lp-loader');
+    var errorDisplay = document.getElementById('lp-error-display');
+    
+    // 3. التحقق من وجود العناصر في الصفحة
+    if(!landingContainer || !mainContent) {
+        showToast("تنبيه: واجهة صفحة الهبوط غير موجودة. تأكد من استدعاء CourseLanding في Index.html", true);
+        return;
+    }
 
+    // 4. إظهار صفحة الهبوط وإخفاء المحتوى الرئيسي
+    try {
+        mainContent.style.display = 'none';
+        landingContainer.classList.remove('hidden');
+        if(loader) loader.classList.remove('hidden');
+        
+        // 5. إخفاء أي رسائل خطأ سابقة
+        if(errorDisplay) {
+            errorDisplay.style.display = 'none';
+            errorDisplay.innerHTML = '';
+        }
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch(e) {
+        console.error("خطأ في تهيئة صفحة الهبوط:", e);
+        showToast("حدث خطأ أثناء فتح صفحة الدورة.", true);
+        return;
+    }
+
+    // 6. جلب بيانات الدورة من السيرفر
     fetchCourseLandingData(courseTitle)
         .then(function(data) {
+            // 7. إخفاء المؤشر بعد جلب البيانات
             if(loader) loader.classList.add('hidden');
             
+            // 8. معالجة البيانات المستلمة
             if(data && data.success) {
                 try {
-                    if(document.getElementById('lp-title')) document.getElementById('lp-title').innerText = data.title || '';
-                    if(document.getElementById('lp-image')) document.getElementById('lp-image').src = getValidImageUrl(data.image);
-                    if(document.getElementById('lp-desc')) document.getElementById('lp-desc').innerText = data.description || '';
-                    if(document.getElementById('lp-duration')) document.getElementById('lp-duration').innerText = data.duration || '';
-                    if(document.getElementById('lp-trainer')) document.getElementById('lp-trainer').innerText = data.trainer || '';
-                    if(document.getElementById('lp-target')) document.getElementById('lp-target').innerText = data.targetAudience || '';
-                    if(document.getElementById('lp-fee')) document.getElementById('lp-fee').innerText = data.fee || '';
+                    // 9. تعبئة جميع عناصر الصفحة بالبيانات
+                    var titleElement = document.getElementById('lp-title');
+                    var imageElement = document.getElementById('lp-image');
+                    var descElement = document.getElementById('lp-desc');
+                    var durationElement = document.getElementById('lp-duration');
+                    var trainerElement = document.getElementById('lp-trainer');
+                    var targetElement = document.getElementById('lp-target');
+                    var feeElement = document.getElementById('lp-fee');
+                    var whatsappElement = document.getElementById('lp-whatsapp');
+                    var objectivesElement = document.getElementById('lp-objectives');
+                    var syllabusElement = document.getElementById('lp-syllabus');
                     
-                    var waText = encodeURIComponent("مرحباً أكاديمية اقرأ، أرغب بالاستفسار عن برنامج: " + data.title);
-                    if(document.getElementById('lp-whatsapp')) document.getElementById('lp-whatsapp').href = "https://wa.me/967777644293?text=" + waText;
-
-                    var formatList = function(text, iconClass) {
-                        if(!text) return "<li>لا توجد بيانات تفصيلية</li>";
-                        return text.toString().split('-').filter(function(i) { return i.trim() !== ''; }).map(function(i) { 
+                    // 10. تعبئة النصوص
+                    if(titleElement) titleElement.innerText = data.title || 'عنوان الدورة';
+                    if(imageElement) imageElement.src = getValidImageUrl(data.image);
+                    if(descElement) descElement.innerText = data.description || 'لا يوجد وصف لهذه الدورة حالياً.';
+                    if(durationElement) durationElement.innerText = data.duration || 'غير محدد';
+                    if(trainerElement) trainerElement.innerText = data.trainer || 'نخبة من المدربين';
+                    if(targetElement) targetElement.innerText = data.targetAudience || 'جميع الفئات';
+                    if(feeElement) feeElement.innerText = data.fee || 'تواصل معنا';
+                    
+                    // 11. تحديث رابط الواتساب
+                    if(whatsappElement && data.title) {
+                        var waText = encodeURIComponent("مرحباً أكاديمية اقرأ، أرغب بالاستفسار عن برنامج: " + data.title);
+                        whatsappElement.href = "https://wa.me/967777644293?text=" + waText;
+                    }
+                    
+                    // 12. تنسيق وعرض الأهداف والمحاور
+                    var formatList = function(text, iconClass, emptyMessage) {
+                        if(!text || text.trim() === '') {
+                            return "<li class='text-slate-400'>" + (emptyMessage || 'لا توجد بيانات تفصيلية') + "</li>";
+                        }
+                        var items = text.toString().split('-').filter(function(i) { return i.trim() !== ''; });
+                        if(items.length === 0) {
+                            return "<li class='text-slate-400'>" + (emptyMessage || 'لا توجد بيانات تفصيلية') + "</li>";
+                        }
+                        return items.map(function(i) { 
                             return '<li><i class="' + iconClass + ' ml-2"></i>' + i.trim() + '</li>'; 
                         }).join('');
                     };
                     
-                    if(document.getElementById('lp-objectives')) document.getElementById('lp-objectives').innerHTML = formatList(data.objectives, "fas fa-check text-emerald-500");
-                    if(document.getElementById('lp-syllabus')) document.getElementById('lp-syllabus').innerHTML = formatList(data.syllabus, "fas fa-angle-left text-[#D4A017]");
+                    if(objectivesElement) {
+                        objectivesElement.innerHTML = formatList(data.objectives, "fas fa-check text-emerald-500", "لم يتم تحديد أهداف للدورة بعد.");
+                    }
                     
+                    if(syllabusElement) {
+                        syllabusElement.innerHTML = formatList(data.syllabus, "fas fa-angle-left text-[#D4A017]", "لم يتم تحديد محاور للدورة بعد.");
+                    }
+                    
+                    // 13. حفظ عنوان الدورة للاستخدام المستقبلي
                     landingContainer.setAttribute('data-current-course', data.title);
+                    
+                    // 14. عرض رسالة نجاح
+                    showToast("تم تحميل تفاصيل الدورة بنجاح.");
+                    
                 } catch(e) {
-                    alert("حدث خطأ فني أثناء ترتيب البيانات: " + e.message);
-                    closeLandingPage();
+                    console.error("خطأ في عرض بيانات الدورة:", e);
+                    showToast("حدث خطأ أثناء عرض تفاصيل الدورة: " + e.message, true);
+                    // محاولة عرض البيانات الأساسية على الأقل
+                    if(titleElement) titleElement.innerText = courseTitle;
                 }
             } else {
-                alert(data ? data.error : "عذراً، لم يتم إدراج تفاصيل هذه الدورة بعد.");
-                closeLandingPage();
+                // 15. معالجة حالة عدم وجود بيانات
+                var errorMsg = data ? data.error : "عذراً، لم يتم إدراج تفاصيل هذه الدورة بعد.";
+                showToast(errorMsg, true);
+                
+                // عرض رسالة خطأ في صفحة الهبوط بدلاً من إغلاقها فوراً
+                if(errorDisplay) {
+                    errorDisplay.style.display = 'block';
+                    errorDisplay.innerHTML = `
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
+                            <i class="fas fa-exclamation-triangle text-amber-500 text-3xl mb-3"></i>
+                            <p class="text-amber-800 font-bold">${errorMsg}</p>
+                            <button onclick="closeLandingPage()" class="mt-4 bg-[#0B1F4D] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#132F6B] transition">
+                                العودة للصفحة الرئيسية
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    // إذا لم يكن هناك عنصر لعرض الخطأ، نغلق الصفحة بعد 3 ثوانٍ
+                    setTimeout(function() {
+                        closeLandingPage();
+                    }, 3000);
+                }
             }
         })
         .catch(function(err) {
-            if(loader) loader.classList.add('hidden'); 
-            alert("فشل الاتصال بالخادم. التفاصيل: " + err); 
-            closeLandingPage();
+            // 16. معالجة أخطاء الاتصال
+            if(loader) loader.classList.add('hidden');
+            console.error("خطأ في الاتصال بالسيرفر:", err);
+            
+            var errorMsg = "فشل الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.";
+            showToast(errorMsg, true);
+            
+            // عرض رسالة خطأ في صفحة الهبوط
+            if(errorDisplay) {
+                errorDisplay.style.display = 'block';
+                errorDisplay.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+                        <i class="fas fa-wifi text-red-500 text-3xl mb-3"></i>
+                        <p class="text-red-800 font-bold">${errorMsg}</p>
+                        <div class="mt-4 flex gap-2 justify-center">
+                            <button onclick="location.reload()" class="bg-[#0B1F4D] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#132F6B] transition">
+                                <i class="fas fa-sync ml-2"></i> إعادة المحاولة
+                            </button>
+                            <button onclick="closeLandingPage()" class="bg-slate-200 text-slate-700 px-6 py-2 rounded-xl font-bold hover:bg-slate-300 transition">
+                                العودة للرئيسية
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // إغلاق الصفحة بعد 5 ثوانٍ
+                setTimeout(function() {
+                    closeLandingPage();
+                }, 5000);
+            }
         });
 }
 
