@@ -66,26 +66,12 @@ function initializeWebsiteLayout() {
     loadRealAdsFromServer();
     loadPaymentMethods();
     
-    // 💡 الإصلاح: تسجيل الزيارة فور فتح الموقع
-    var sessionId = sessionStorage.getItem('visitor_session');
-    if (!sessionId) {
-        sessionId = 'زائر-' + Math.floor(Math.random() * 9999);
-        sessionStorage.setItem('visitor_session', sessionId);
-    }
-    if (typeof logVisitorActivity === 'function') {
-        logVisitorActivity('الرئيسية (دخول مبدئي)', sessionId);
-    }
-    
-    if (!localStorage.getItem('welcome_popup_shown')) {
-        setTimeout(function() { 
-            var welcomePopup = document.getElementById('welcome-popup');
-            if(welcomePopup) {
-                welcomePopup.classList.remove('hidden');
-                localStorage.setItem('welcome_popup_shown', 'true');
-            }
-        }, 6000);
-    }
+    setTimeout(function() { 
+        var welcomePopup = document.getElementById('welcome-popup');
+        if(welcomePopup) welcomePopup.classList.remove('hidden'); 
+    }, 6000);
 }
+
 function toggleMobileMenu() {
     var menu = document.getElementById('mobile-menu');
     var icon = document.getElementById('menu-toggle-icon');
@@ -142,24 +128,14 @@ function navigateTo(pageId) {
     if(document.getElementById('page-' + pageId)) document.getElementById('page-' + pageId).classList.add('active');
     if(document.getElementById('btn-' + pageId)) document.getElementById('btn-' + pageId).classList.add('nav-active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
-    // 💡 3. كود تتبع تحركات الزائر (تمت إضافته هنا بنجاح)
-    var sessionId = sessionStorage.getItem('visitor_session');
-    if (!sessionId) {
-        sessionId = 'زائر-' + Math.floor(Math.random() * 9999);
-        sessionStorage.setItem('visitor_session', sessionId);
-    }
-    
-    var pageTitles = {
-        'home': 'الرئيسية', 'courses': 'الدورات التدريبية', 'b2b': 'خدمات الشركات',
-        'news': 'الأخبار', 'verification': 'فحص الشهادات', 'contact': 'تواصل معنا',
-        'register': 'استمارة التسجيل', 'payment': 'بوابة الدفع'
-    };
-    var pageName = pageTitles[pageId] || pageId;
-    
-    // إرسال البيانات للسيرفر في الخلفية
-    if(typeof logVisitorActivity === 'function') {
-        logVisitorActivity(pageName, sessionId);
+function trackButtonClick(buttonName) {
+    if(buttonName === 'WhatsApp_Float') { 
+        try { 
+            totalClicks += 1; 
+            localStorage.setItem('wa_clicks', totalClicks); 
+        } catch(e) {}
     }
 }
 
@@ -431,14 +407,7 @@ async function handleNewRegistration(e) {
     submitBtn.innerText = 'جاري التسجيل والربط...';
     submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
 
-    // 💡 توليد رقم عشوائي من 4 خانات (بين 1000 و 9999)
-    var randomNum = Math.floor(1000 + Math.random() * 9000); 
-    // 💡 التنسيق الجديد المطلق: IQR متبوعة بمسافة ثم الرقم (مثال: IQR 1001)
-    var generatedOrderID = "IQR " + randomNum; 
-
-    // تضمين الرقم المولد ضمن البيانات المرسلة للسيرفر
     var studentData = {
-        orderID: generatedOrderID, 
         nameAr: document.getElementById('reg-name-ar') ? document.getElementById('reg-name-ar').value : '',
         nameEn: document.getElementById('reg-name-en') ? document.getElementById('reg-name-en').value : '',
         whatsapp: document.getElementById('reg-whatsapp') ? document.getElementById('reg-whatsapp').value : '',
@@ -466,8 +435,7 @@ async function handleNewRegistration(e) {
                 successDiv.classList.remove('hidden');
                 successDiv.style.display = 'block';
                 if(document.getElementById('displayOrderID')) {
-                    // عرض الرقم بالتنسيق الجديد IQR 1001
-                    document.getElementById('displayOrderID').innerText = generatedOrderID;
+                    document.getElementById('displayOrderID').innerText = res.orderID;
                 }
             }
             
@@ -476,18 +444,19 @@ async function handleNewRegistration(e) {
                 window.open("https://whatsapp.com/channel/0029VbCDK6M4IBhBR3jvVY0Y", "_blank"); 
             }, 3000);
         } else {
-           showToast("❌ خطأ أثناء التسجيل: " + (res ? res.error : "غير معروف"), true);
+           showToast("❌ خطأ أثناء التسجيل: " + (res ? res.error : "غير معروف"));
             submitBtn.disabled = false; 
             submitBtn.innerText = originalText; 
             submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
         }
     } catch(err) {
-        showToast("❌ خطأ اتصال بالسيرفر: " + err, true); 
+        showToast("❌ خطأ اتصال بالسيرفر: " + err); 
         submitBtn.disabled = false; 
         submitBtn.innerText = originalText; 
         submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
     }
 }
+
 function searchNews() {
     var term = document.getElementById('news-search').value.toLowerCase();
     var cards = document.querySelectorAll('#news-list-container > div');
@@ -522,21 +491,7 @@ function handleContactSubmit(e) {
     setTimeout(function() { btn.innerText = "إرسال الرسالة الحين"; e.target.reset(); }, 3000);
 }
 
-// ==========================================
-// دوال التواصل وطلب عروض الشركات (B2B)
-// ==========================================
 function requestB2BQuote(offerName, offerType) {
-    // 💡 إضافة كود التتبع: لتسجيل ضغطة الزائر في رادار وإحصائيات المدير
-    var sessionId = sessionStorage.getItem('visitor_session');
-    if (!sessionId) {
-        sessionId = 'زائر-' + Math.floor(Math.random() * 9999);
-        sessionStorage.setItem('visitor_session', sessionId);
-    }
-    if (typeof logVisitorActivity === 'function') {
-        logVisitorActivity('خدمات الشركات (طلب تواصل)', sessionId);
-    }
-    // --------------------------------------------------------
-
     try {
         var message = "";
         
@@ -555,6 +510,7 @@ function requestB2BQuote(offerName, offerType) {
         console.error("خطأ في فتح الواتساب:", e);
     }
 }
+
 // ==========================================
 // دوال التحقق من الشهادات
 // ==========================================
@@ -604,17 +560,13 @@ function renderVerificationResult(result) {
 // ==========================================
 
 function openLoginModal() { 
-    let loginModal = document.getElementById('loginModal');
-    if (loginModal) {
-        loginModal.style.display = 'flex'; // أفضل من classList
-    }
+    document.getElementById('loginModal').classList.remove('hidden'); 
 }
+
 function closeLoginModal() { 
-    let loginModal = document.getElementById('loginModal');
-    if (loginModal) {
-        loginModal.style.display = 'none';
-    }
+    document.getElementById('loginModal').classList.add('hidden'); 
 }
+
 async function handleLoginSubmit(e) {
     e.preventDefault();
     var btn = document.getElementById('loginSubmitBtn');
@@ -648,37 +600,34 @@ async function handleLoginSubmit(e) {
                 document.getElementById('marketer-link-box').classList.add('hidden');
             }
 
-            // --- التحكم بالصلاحيات وإظهار/إخفاء سجل الزوار ---
             if(res.role !== 'admin') {
                 document.getElementById('tab-btn-content').style.display = 'none';
                 document.getElementById('tab-btn-settings').style.display = 'none';
-                if(document.getElementById('tab-btn-ads-news')) document.getElementById('tab-btn-ads-news').style.display = 'none';
-                if(document.getElementById('tab-btn-payments')) document.getElementById('tab-btn-payments').style.display = 'none';
+                if(document.getElementById('tab-btn-ads-news')) {
+                    document.getElementById('tab-btn-ads-news').style.display = 'none';
+                }
+                if(document.getElementById('tab-btn-payments')) {
+                    document.getElementById('tab-btn-payments').style.display = 'none';
+                }
                 document.getElementById('tab-title-users').innerText = "طلابي المسجلين";
                 switchAdminTab('tab-stats', document.getElementById('tab-btn-stats'));
-                
-                // إخفاء سجل الزوار كلياً عن غير المدير
-                var visitorLogsDiv = document.getElementById('admin-only-visitor-logs');
-                if(visitorLogsDiv) visitorLogsDiv.classList.add('hidden');
-
             } else {
                 document.getElementById('tab-btn-content').style.display = 'block';
                 document.getElementById('tab-btn-settings').style.display = 'block';
-                if(document.getElementById('tab-btn-ads-news')) document.getElementById('tab-btn-ads-news').style.display = 'block';
-                if(document.getElementById('tab-btn-payments')) document.getElementById('tab-btn-payments').style.display = 'block';
+                if(document.getElementById('tab-btn-ads-news')) {
+                    document.getElementById('tab-btn-ads-news').style.display = 'block';
+                }
+                if(document.getElementById('tab-btn-payments')) {
+                    document.getElementById('tab-btn-payments').style.display = 'block';
+                }
                 document.getElementById('tab-title-users').innerText = "إدارة المتدربين";
-                
-                // إظهار وتشغيل سجل الزوار لمدير الأكاديمية فقط
-                var visitorLogsDiv = document.getElementById('admin-only-visitor-logs');
-                if(visitorLogsDiv) visitorLogsDiv.classList.remove('hidden');
-                loadVisitorLogs(); 
             }
             
             loadDashboardData(res.role, res.marketerCode, res.name);
             loadStatsData(res.role, res.marketerCode, res.name);
             closeLoginModal();
         } else {
-            alert(res.message || res.error || "خطأ في بيانات الدخول");
+            alert(res.message);
         }
         btn.innerText = "دخول"; 
         btn.disabled = false;
@@ -688,6 +637,7 @@ async function handleLoginSubmit(e) {
         btn.disabled = false;
     }
 }
+
 function logout() {
     sessionStorage.clear();
     document.getElementById('admin-content').style.display = 'none';
@@ -729,15 +679,15 @@ async function loadDashboardData(role, code, name) {
             if (currentStatus === 'جديد' || currentStatus === '') {
                 statusBadge = `<span class="text-blue-600 bg-blue-50 px-2 py-1 rounded">جديد</span>`;
                 actionButtons = `
-                    <button onclick="changeStudentStateUI('${row.orderID}', 'مقبول')" class="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600 m-1">قبول</button>
-                    <button onclick="changeStudentStateUI('${row.orderID}', 'مرفوض')" class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 m-1">رفض</button>
+                    <button onclick="updateStudentState('${row.orderID}', 'مقبول')" class="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600 m-1">قبول</button>
+                    <button onclick="updateStudentState('${row.orderID}', 'مرفوض')" class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 m-1">رفض</button>
                 `;
             } 
             else if (currentStatus === 'مقبول') {
                 statusBadge = `<span class="text-green-600 bg-green-50 px-2 py-1 rounded">مقبول</span>`;
                 actionButtons = `
-                    <button onclick="changeStudentStateUI('${row.orderID}', 'تم تسديد الشهادة')" class="bg-[#D4A017] text-white px-2 py-1 rounded text-xs hover:bg-yellow-600 m-1 shadow-sm">سدد الشهادة</button>
-                    <button onclick="changeStudentStateUI('${row.orderID}', 'لم يتم تسديد الشهادة')" class="bg-gray-500 text-white px-2 py-1 rounded text-xs hover:bg-gray-600 m-1 shadow-sm">لم يسدد</button>
+                    <button onclick="updateStudentState('${row.orderID}', 'تم تسديد الشهادة')" class="bg-[#D4A017] text-white px-2 py-1 rounded text-xs hover:bg-yellow-600 m-1 shadow-sm">سدد الشهادة</button>
+                    <button onclick="updateStudentState('${row.orderID}', 'لم يتم تسديد الشهادة')" class="bg-gray-500 text-white px-2 py-1 rounded text-xs hover:bg-gray-600 m-1 shadow-sm">لم يسدد</button>
                 `;
             } 
             else if (currentStatus === 'تم تسديد الشهادة') {
@@ -747,7 +697,7 @@ async function loadDashboardData(role, code, name) {
             else if (currentStatus === 'لم يتم تسديد الشهادة') {
                 statusBadge = `<span class="text-gray-600 bg-gray-100 px-2 py-1 rounded">لم يسدد</span>`;
                 actionButtons = `
-                    <button onclick="changeStudentStateUI('${row.orderID}', 'تم تسديد الشهادة')" class="bg-[#D4A017] text-white px-2 py-1 rounded text-xs hover:bg-yellow-600 m-1 shadow-sm">تأكيد التسديد</button>
+                    <button onclick="updateStudentState('${row.orderID}', 'تم تسديد الشهادة')" class="bg-[#D4A017] text-white px-2 py-1 rounded text-xs hover:bg-yellow-600 m-1 shadow-sm">تأكيد التسديد</button>
                 `;
             }
             else if (currentStatus === 'مرفوض') {
@@ -1198,218 +1148,73 @@ function renderTestimonialsAdmin(data) {
 // ==========================================
 
 function openLandingPage(courseTitle) {
-    // 1. التحقق من صحة العنوان
-    if (!courseTitle || courseTitle.trim() === '') {
-        showToast("عنوان الدورة غير صحيح. يرجى المحاولة مرة أخرى.", true);
-        return;
-    }
-
-    // 2. تهيئة المتغيرات والعناصر
     var landingContainer = document.getElementById('landing-page-container');
     var mainContent = document.getElementById('main-content');
     var loader = document.getElementById('lp-loader');
-    var errorDisplay = document.getElementById('lp-error-display');
     
-    // 3. التحقق من وجود العناصر في الصفحة
     if(!landingContainer || !mainContent) {
-        showToast("تنبيه: واجهة صفحة الهبوط غير موجودة. تأكد من استدعاء CourseLanding في Index.html", true);
+        alert("تنبيه: واجهة صفحة الهبوط غير موجودة. تأكد من استدعاء CourseLanding في Index.html");
         return;
     }
 
-    // 4. إظهار صفحة الهبوط وإخفاء المحتوى الرئيسي
-    try {
-        mainContent.style.display = 'none';
-        landingContainer.classList.remove('hidden');
-        if(loader) loader.classList.remove('hidden');
-        
-        // 5. إخفاء أي رسائل خطأ سابقة
-        if(errorDisplay) {
-            errorDisplay.style.display = 'none';
-            errorDisplay.innerHTML = '';
-        }
-        
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch(e) {
-        console.error("خطأ في تهيئة صفحة الهبوط:", e);
-        showToast("حدث خطأ أثناء فتح صفحة الدورة.", true);
-        return;
-    }
+    mainContent.style.display = 'none';
+    landingContainer.classList.remove('hidden');
+    if(loader) loader.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // 6. جلب بيانات الدورة من السيرفر
     fetchCourseLandingData(courseTitle)
         .then(function(data) {
-            // 7. إخفاء المؤشر بعد جلب البيانات
             if(loader) loader.classList.add('hidden');
             
-            // 8. معالجة البيانات المستلمة
             if(data && data.success) {
                 try {
-                    // 9. تعبئة جميع عناصر الصفحة بالبيانات
-                    var titleElement = document.getElementById('lp-title');
-                    var imageElement = document.getElementById('lp-image');
-                    var descElement = document.getElementById('lp-desc');
-                    var durationElement = document.getElementById('lp-duration');
-                    var trainerElement = document.getElementById('lp-trainer');
-                    var targetElement = document.getElementById('lp-target');
-                    var feeElement = document.getElementById('lp-fee');
-                    var whatsappElement = document.getElementById('lp-whatsapp');
-                    var objectivesElement = document.getElementById('lp-objectives');
-                    var syllabusElement = document.getElementById('lp-syllabus');
+                    if(document.getElementById('lp-title')) document.getElementById('lp-title').innerText = data.title || '';
+                    if(document.getElementById('lp-image')) document.getElementById('lp-image').src = getValidImageUrl(data.image);
+                    if(document.getElementById('lp-desc')) document.getElementById('lp-desc').innerText = data.description || '';
+                    if(document.getElementById('lp-duration')) document.getElementById('lp-duration').innerText = data.duration || '';
+                    if(document.getElementById('lp-trainer')) document.getElementById('lp-trainer').innerText = data.trainer || '';
+                    if(document.getElementById('lp-target')) document.getElementById('lp-target').innerText = data.targetAudience || '';
+                    if(document.getElementById('lp-fee')) document.getElementById('lp-fee').innerText = data.fee || '';
                     
-                    // 10. تعبئة النصوص
-                    if(titleElement) titleElement.innerText = data.title || 'عنوان الدورة';
-                    if(imageElement) imageElement.src = getValidImageUrl(data.image);
-                    if(descElement) descElement.innerText = data.description || 'لا يوجد وصف لهذه الدورة حالياً.';
-                    if(durationElement) durationElement.innerText = data.duration || 'غير محدد';
-                    if(trainerElement) trainerElement.innerText = data.trainer || 'نخبة من المدربين';
-                    if(targetElement) targetElement.innerText = data.targetAudience || 'جميع الفئات';
-                    if(feeElement) feeElement.innerText = data.fee || 'تواصل معنا';
-                    
-                    // 11. تحديث رابط الواتساب
-                    if(whatsappElement && data.title) {
-                        var waText = encodeURIComponent("مرحباً أكاديمية اقرأ، أرغب بالاستفسار عن برنامج: " + data.title);
-                        whatsappElement.href = "https://wa.me/967777644293?text=" + waText;
-                    }
-                    
-                    // 12. تنسيق وعرض الأهداف والمحاور
-                    var formatList = function(text, iconClass, emptyMessage) {
-                        if(!text || text.trim() === '') {
-                            return "<li class='text-slate-400'>" + (emptyMessage || 'لا توجد بيانات تفصيلية') + "</li>";
-                        }
-                        var items = text.toString().split('-').filter(function(i) { return i.trim() !== ''; });
-                        if(items.length === 0) {
-                            return "<li class='text-slate-400'>" + (emptyMessage || 'لا توجد بيانات تفصيلية') + "</li>";
-                        }
-                        return items.map(function(i) { 
+                    var waText = encodeURIComponent("مرحباً أكاديمية اقرأ، أرغب بالاستفسار عن برنامج: " + data.title);
+                    if(document.getElementById('lp-whatsapp')) document.getElementById('lp-whatsapp').href = "https://wa.me/967777644293?text=" + waText;
+
+                    var formatList = function(text, iconClass) {
+                        if(!text) return "<li>لا توجد بيانات تفصيلية</li>";
+                        return text.toString().split('-').filter(function(i) { return i.trim() !== ''; }).map(function(i) { 
                             return '<li><i class="' + iconClass + ' ml-2"></i>' + i.trim() + '</li>'; 
                         }).join('');
                     };
                     
-                    if(objectivesElement) {
-                        objectivesElement.innerHTML = formatList(data.objectives, "fas fa-check text-emerald-500", "لم يتم تحديد أهداف للدورة بعد.");
-                    }
+                    if(document.getElementById('lp-objectives')) document.getElementById('lp-objectives').innerHTML = formatList(data.objectives, "fas fa-check text-emerald-500");
+                    if(document.getElementById('lp-syllabus')) document.getElementById('lp-syllabus').innerHTML = formatList(data.syllabus, "fas fa-angle-left text-[#D4A017]");
                     
-                    if(syllabusElement) {
-                        syllabusElement.innerHTML = formatList(data.syllabus, "fas fa-angle-left text-[#D4A017]", "لم يتم تحديد محاور للدورة بعد.");
-                    }
-                    
-                    // 13. حفظ عنوان الدورة للاستخدام المستقبلي
                     landingContainer.setAttribute('data-current-course', data.title);
-                    
-                    // 14. عرض رسالة نجاح
-                    showToast("تم تحميل تفاصيل الدورة بنجاح.");
-                    
                 } catch(e) {
-                    console.error("خطأ في عرض بيانات الدورة:", e);
-                    showToast("حدث خطأ أثناء عرض تفاصيل الدورة: " + e.message, true);
-                    // محاولة عرض البيانات الأساسية على الأقل
-                    if(titleElement) titleElement.innerText = courseTitle;
+                    alert("حدث خطأ فني أثناء ترتيب البيانات: " + e.message);
+                    closeLandingPage();
                 }
             } else {
-                // 15. معالجة حالة عدم وجود بيانات
-                var errorMsg = data ? data.error : "عذراً، لم يتم إدراج تفاصيل هذه الدورة بعد.";
-                showToast(errorMsg, true);
-                
-                // عرض رسالة خطأ في صفحة الهبوط بدلاً من إغلاقها فوراً
-                if(errorDisplay) {
-                    errorDisplay.style.display = 'block';
-                    errorDisplay.innerHTML = `
-                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
-                            <i class="fas fa-exclamation-triangle text-amber-500 text-3xl mb-3"></i>
-                            <p class="text-amber-800 font-bold">${errorMsg}</p>
-                            <button onclick="closeLandingPage()" class="mt-4 bg-[#0B1F4D] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#132F6B] transition">
-                                العودة للصفحة الرئيسية
-                            </button>
-                        </div>
-                    `;
-                } else {
-                    // إذا لم يكن هناك عنصر لعرض الخطأ، نغلق الصفحة بعد 3 ثوانٍ
-                    setTimeout(function() {
-                        closeLandingPage();
-                    }, 3000);
-                }
+                alert(data ? data.error : "عذراً، لم يتم إدراج تفاصيل هذه الدورة بعد.");
+                closeLandingPage();
             }
         })
         .catch(function(err) {
-            // 16. معالجة أخطاء الاتصال
-            if(loader) loader.classList.add('hidden');
-            console.error("خطأ في الاتصال بالسيرفر:", err);
-            
-            var errorMsg = "فشل الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.";
-            showToast(errorMsg, true);
-            
-            // عرض رسالة خطأ في صفحة الهبوط
-            if(errorDisplay) {
-                errorDisplay.style.display = 'block';
-                errorDisplay.innerHTML = `
-                    <div class="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-                        <i class="fas fa-wifi text-red-500 text-3xl mb-3"></i>
-                        <p class="text-red-800 font-bold">${errorMsg}</p>
-                        <div class="mt-4 flex gap-2 justify-center">
-                            <button onclick="location.reload()" class="bg-[#0B1F4D] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#132F6B] transition">
-                                <i class="fas fa-sync ml-2"></i> إعادة المحاولة
-                            </button>
-                            <button onclick="closeLandingPage()" class="bg-slate-200 text-slate-700 px-6 py-2 rounded-xl font-bold hover:bg-slate-300 transition">
-                                العودة للرئيسية
-                            </button>
-                        </div>
-                    </div>
-                `;
-            } else {
-                // إغلاق الصفحة بعد 5 ثوانٍ
-                setTimeout(function() {
-                    closeLandingPage();
-                }, 5000);
-            }
+            if(loader) loader.classList.add('hidden'); 
+            alert("فشل الاتصال بالخادم. التفاصيل: " + err); 
+            closeLandingPage();
         });
 }
 
 function closeLandingPage() {
-    // 1. تهيئة المتغيرات
     var landingContainer = document.getElementById('landing-page-container');
     var mainContent = document.getElementById('main-content');
     var loader = document.getElementById('lp-loader');
-    var errorDisplay = document.getElementById('lp-error-display');
     
-    // 2. إخفاء جميع عناصر صفحة الهبوط
-    if(loader) {
-        loader.classList.add('hidden');
-        loader.style.display = 'none';
-    }
-    
-    if(errorDisplay) {
-        errorDisplay.style.display = 'none';
-        errorDisplay.innerHTML = '';
-    }
-    
-    if(landingContainer) {
-        landingContainer.classList.add('hidden');
-        landingContainer.style.display = 'none';
-    }
-    
-    // 3. إظهار المحتوى الرئيسي
-    if(mainContent) {
-        mainContent.style.display = 'block';
-    }
-    
-    // 4. تنظيف أي بيانات مؤقتة
-    sessionStorage.removeItem('current_landing_course');
-    
-    // 5. التمرير لأعلى الصفحة
-    try {
-        window.scrollTo({ 
-            top: 0, 
-            behavior: 'smooth' 
-        });
-    } catch(e) {
-        // في حال تعذر التمرير السلس
-        window.scrollTo(0, 0);
-    }
-    
-    // 6. إعادة تعيين عنوان الصفحة
-    if(document.title && document.title.includes('تفاصيل الدورة')) {
-        document.title = 'أكاديمية اقرأ للاستشارات والتدريب';
-    }
+    if(loader) loader.classList.add('hidden');
+    if(landingContainer) landingContainer.classList.add('hidden');
+    if(mainContent) mainContent.style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function registerFromLanding() {
@@ -1512,14 +1317,13 @@ async function saveCourseDetails(event) {
 // دوال تحديث حالة المتدرب
 // ==========================================
 
-async function changeStudentStateUI(orderId, newStatus) {
+async function updateStudentState(orderId, newStatus) {
     if(!confirm("هل تريد تغيير حالة الطلب إلى: " + newStatus + "؟")) return;
     
     document.body.style.cursor = 'wait';
     
     try {
-        // استدعاء دالة API الأصلية لفك التعارض البرمجي
-        const res = await callAPI('updateStudentState', { orderId, newStatus });
+        const res = await updateStudentState(orderId, newStatus);
         document.body.style.cursor = 'default';
         if(res && res.success) {
             alert("✅ تم تغيير الحالة بنجاح إلى: " + res.newStatus);
@@ -1529,13 +1333,14 @@ async function changeStudentStateUI(orderId, newStatus) {
             var currentName = sessionStorage.getItem('name');
             loadDashboardData(currentRole, currentCode, currentName);
         } else {
-            alert("❌ خطأ: " + (res.error || res.message));
+            alert("❌ خطأ: " + res.error);
         }
     } catch(err) {
         document.body.style.cursor = 'default';
         alert("❌ فشل الاتصال بالخادم: " + err);
     }
 }
+
 // ==========================================
 // دوال نظام المدفوعات
 // ==========================================
@@ -2301,143 +2106,4 @@ function endOnboardingTour() {
     
     localStorage.setItem('onboarding_completed', 'true');
     showToast('تمت الجولة بنجاح! شكراً لك.');
-}
-// ==========================================
-// دالة نسخ رقم الطلب
-// ==========================================
-function copyOrderID(btnElement) {
-    var orderIDText = document.getElementById('displayOrderID').innerText;
-    if (!orderIDText) return;
-    
-    // إنشاء حقل نصي وهمي لنسخ النص منه
-    var tempInput = document.createElement("input");
-    tempInput.value = orderIDText;
-    document.body.appendChild(tempInput);
-    tempInput.select();
-    document.execCommand("copy");
-    document.body.removeChild(tempInput);
-    
-    // تغيير شكل الزر لإظهار نجاح النسخ
-    var originalHTML = btnElement.innerHTML;
-    btnElement.innerHTML = '<i class="fas fa-check text-emerald-600"></i> تم';
-    btnElement.classList.add('bg-emerald-50', 'border-emerald-200');
-    
-    // إعادته لشكله الأصلي بعد ثانيتين
-    setTimeout(function() {
-        btnElement.innerHTML = originalHTML;
-        btnElement.classList.remove('bg-emerald-50', 'border-emerald-200');
-    }, 2000);
-}
-// ==========================================
-// دالة التسجيل في دورة أخرى
-// ==========================================
-// ==========================================
-// دالة التسجيل في دورة أخرى
-// ==========================================
-function registerAnotherCourse() {
-    // 1. إخفاء رسالة النجاح
-    var successDiv = document.getElementById('successMessage');
-    if(successDiv) {
-        successDiv.style.display = 'none';
-        successDiv.classList.add('hidden');
-    }
-    
-    // 2. إعادة إظهار عناصر نموذج التسجيل لحالتها الطبيعية
-    var formChildren = document.getElementById('registration-form').children;
-    for (var i = 0; i < formChildren.length; i++) {
-         if (formChildren[i].id !== 'successMessage') { 
-             formChildren[i].style.display = ''; // إزالة الإخفاء
-         }
-    }
-    
-    // 💡 3. إعادة تنشيط زر التسجيل ليعمل من جديد (حل مشكلة التعليق)
-    var submitBtn = document.getElementById('submit-btn');
-    if(submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerText = 'تأكيد التسجيل وإصدار رقم الطلب';
-        submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
-    }
-    
-    // 4. تصفير جميع الحقول وإخفاء تفاصيل الدورة السابقة
-    document.getElementById('registration-form').reset();
-    var dynamicInfo = document.getElementById('course-dynamic-info');
-    if(dynamicInfo) {
-        dynamicInfo.classList.add('hidden');
-        dynamicInfo.innerHTML = '';
-    }
-    
-    // 5. توجيه الطالب فوراً إلى قسم الدورات التدريبية
-    navigateTo('courses');
-}
-// ==========================================
-// رسالة التنبيه عند محاولة إغلاق الموقع أو التراجع
-// ==========================================
-window.addEventListener('beforeunload', function (e) {
-    // إلغاء الحدث الافتراضي
-    e.preventDefault();
-    
-    // هذا السطر إجباري للمتصفحات الحديثة لكي تظهر رسالة التنبيه الافتراضية
-    e.returnValue = ''; 
-    
-    return '';
-});
-// ==========================================
-// جلب سجل الزوار للمدير (نظام المصفوفة ✅ ❌)
-// ==========================================
-async function loadVisitorLogs() {
-    var tbody = document.getElementById('visitor-logs-tbody');
-    if(!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-slate-400">جاري مسح الرادار وجلب البيانات...</td></tr>';
-    
-    try {
-        const res = await fetchVisitorLogs();
-        
-        if (res && res.error) {
-            tbody.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-rose-600 font-black text-sm">خطأ: ' + res.error + '</td></tr>';
-            return;
-        }
-        
-        if(res && res.success) {
-            // 1. تحديث الإحصائيات العددية المستمرة
-            if(document.getElementById('stat-total-visitors')) document.getElementById('stat-total-visitors').innerText = res.stats.totalVisitors || 0;
-            if(document.getElementById('stat-total-b2b')) document.getElementById('stat-total-b2b').innerText = res.stats.b2bRequests || 0;
-            
-            // جلب عدد المسجلين (الدورات) من بطاقة الإحصائيات الرئيسية
-            var totalStudentsCard = document.querySelector('#tab-stats .grid .text-2xl');
-            if(document.getElementById('stat-total-regs') && totalStudentsCard) {
-                 document.getElementById('stat-total-regs').innerText = totalStudentsCard.innerText;
-            }
-
-            // 2. رسم جدول الزوار (الصح والخطأ)
-            let logsArray = res.logs || [];
-            if(logsArray.length > 0) {
-                tbody.innerHTML = '';
-                logsArray.forEach(function(log) {
-                    // دالة ذكية تفحص هل زار الصفحة أم لا وتضع الأيقونة المناسبة
-                    const checkPage = (pageName) => {
-                        let visited = Object.keys(log.pages).some(p => p.includes(pageName));
-                        return visited 
-                            ? '<i class="fas fa-check-circle text-emerald-500 text-lg shadow-sm rounded-full"></i>' 
-                            : '<i class="fas fa-minus text-slate-200"></i>';
-                    };
-
-                    tbody.insertAdjacentHTML('beforeend', `
-                        <tr class="hover:bg-slate-50 transition border-b border-slate-50">
-                            <td class="p-3 text-[#D4A017] font-black">${log.session || '-'}</td>
-                            <td class="p-3 text-slate-500 font-bold dir-ltr text-right text-[10px]">${log.lastDate || '-'}</td>
-                            <td class="p-3 text-center bg-slate-50/50">${checkPage('الرئيسية')}</td>
-                            <td class="p-3 text-center">${checkPage('الدورات')}</td>
-                            <td class="p-3 text-center bg-slate-50/50">${checkPage('الشركات')}</td>
-                            <td class="p-3 text-center">${checkPage('الأخبار')}</td>
-                            <td class="p-3 text-center bg-slate-50/50">${checkPage('فحص')}</td>
-                        </tr>
-                    `);
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-slate-400 font-bold">الرادار فارغ حالياً</td></tr>';
-            }
-        }
-    } catch(e) {
-        tbody.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-rose-600 font-black">خطأ في الاتصال</td></tr>';
-    }
 }
