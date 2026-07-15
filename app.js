@@ -279,7 +279,12 @@ function renderCourses(courses) {
     if(homeFeaturedContainer) homeFeaturedContainer.innerHTML = ''; 
     if(adminCoursesList) adminCoursesList.innerHTML = '';
 
-    // 1️⃣ فلترة وترتيب الدورات المخصصة للرئيسية
+    // 💡 حماية برمجية متقدمة: لمنع تعطل الأزرار بسبب علامات التنصيص في الأسماء
+    var jsSafe = function(str) {
+        if(!str) return '';
+        return str.toString().replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    };
+
     var featuredCourses = courses.filter(function(c) {
         return c.featuredOrder === 1 || c.featuredOrder === 2 || c.featuredOrder === 3;
     }).sort(function(a, b) {
@@ -290,34 +295,33 @@ function renderCourses(courses) {
         featuredCourses = courses.slice(0, 3);
     }
 
-    // 2️⃣ طباعة الدورات المميزة في الصفحة الرئيسية
     featuredCourses.forEach(function(c) {
         var cardMarkup = `
-        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden flex flex-col justify-between text-right transition hover:shadow-xl h-full" data-category="${c.category}">
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden flex flex-col justify-between text-right transition hover:shadow-xl h-full" data-category="${escapeHTML(c.category)}">
            <img class="h-44 w-full object-cover" src="${getValidImageUrl(c.image)}" loading="lazy">
             <div class="p-5 flex-1 flex flex-col justify-between">
                 <div class="mb-4">
-                    <span class="bg-slate-100 text-[#0B1F4D] text-[10px] font-bold px-2.5 py-1 rounded-md border border-slate-200">${c.category}</span>
+                    <span class="bg-slate-100 text-[#0B1F4D] text-[10px] font-bold px-2.5 py-1 rounded-md border border-slate-200">${escapeHTML(c.category)}</span>
                     <h3 class="font-bold text-md text-[#0B1F4D] mt-3">${escapeHTML(c.title)}</h3>
                     <p class="text-xs text-slate-500 mt-1.5"><i class="fas fa-chalkboard-teacher ml-1.5 text-[#D4A017]"></i> المدرب: ${escapeHTML(c.trainer)}</p>
-                    <p class="text-xs text-slate-400 mt-0.5"><i class="fas fa-clock ml-1.5 text-slate-400"></i> المدة: ${c.duration || '36 ساعة تدريبية'}</p>
+                    <p class="text-xs text-slate-400 mt-0.5"><i class="fas fa-clock ml-1.5 text-slate-400"></i> المدة: ${escapeHTML(c.duration || '36 ساعة')}</p>
                 </div>
                 <div class="flex justify-between items-end pt-4 border-t border-slate-50 mt-auto">
                     <div class="flex flex-col gap-2 max-w-[60%] w-full">
                         ${c.discount && c.discount.trim() !== '' ? `
                         <div>
                             <span class="block text-[9px] text-rose-500 font-black mb-0.5">السعر قبل الخصم:</span>
-                            <del class="block text-rose-600 font-bold text-[10px] bg-rose-50 px-2 py-1.5 rounded-lg border border-rose-100 leading-snug break-words">${c.discount}</del>
+                            <del class="block text-rose-600 font-bold text-[10px] bg-rose-50 px-2 py-1.5 rounded-lg border border-rose-100 leading-snug break-words">${escapeHTML(c.discount)}</del>
                         </div>
                         ` : ''}
                         <div>
                             <span class="block text-[9px] text-emerald-600 font-black mb-0.5">${c.discount && c.discount.trim() !== '' ? 'السعر بعد الخصم:' : 'رسوم الدورة:'}</span>
-                            <span class="block text-emerald-700 font-extrabold text-[11px] bg-emerald-50 px-2 py-1.5 rounded-lg border border-emerald-100 leading-snug break-words">${c.fee}</span>
+                            <span class="block text-emerald-700 font-extrabold text-[11px] bg-emerald-50 px-2 py-1.5 rounded-lg border border-emerald-100 leading-snug break-words">${escapeHTML(c.fee)}</span>
                         </div>
                     </div>
                     <div class="flex gap-1.5">
-                        <button onclick="openLandingPage('${escapeHTML(c.title)}')" class="bg-slate-100 hover:bg-slate-200 text-[#0B1F4D] text-[10px] font-bold px-2.5 py-2 rounded-lg border border-slate-200 transition cursor-pointer">التفاصيل</button>
-                        <button onclick="selectCourseDirectly('${escapeHTML(c.title)}')" class="bg-[#0B1F4D] hover:bg-[#132F6B] text-white text-[10px] font-bold px-2.5 py-2 rounded-lg shadow-md transition cursor-pointer">سجل الآن</button>
+                        <button onclick="openLandingPage('${jsSafe(c.title)}')" class="bg-slate-100 hover:bg-slate-200 text-[#0B1F4D] text-[10px] font-bold px-2.5 py-2 rounded-lg border border-slate-200 transition cursor-pointer">التفاصيل</button>
+                        <button onclick="selectCourseDirectly('${jsSafe(c.title)}')" class="bg-[#0B1F4D] hover:bg-[#132F6B] text-white text-[10px] font-bold px-2.5 py-2 rounded-lg shadow-md transition cursor-pointer">سجل الآن</button>
                     </div>
                 </div>
             </div>
@@ -325,34 +329,33 @@ function renderCourses(courses) {
         if(homeFeaturedContainer) homeFeaturedContainer.insertAdjacentHTML('beforeend', cardMarkup);
     });
 
-    // 3️⃣ طباعة كل الدورات في صفحة (الدورات التدريبية المكتملة)
     courses.forEach(function(c, index) {
         var cardMarkup = `
-        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden flex flex-col justify-between text-right transition hover:shadow-xl h-full" data-category="${c.category}">
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden flex flex-col justify-between text-right transition hover:shadow-xl h-full" data-category="${escapeHTML(c.category)}">
            <img class="h-44 w-full object-cover" src="${getValidImageUrl(c.image)}" loading="lazy">
             <div class="p-5 flex-1 flex flex-col justify-between">
                 <div class="mb-4">
-                    <span class="bg-slate-100 text-[#0B1F4D] text-[10px] font-bold px-2.5 py-1 rounded-md border border-slate-200">${c.category}</span>
+                    <span class="bg-slate-100 text-[#0B1F4D] text-[10px] font-bold px-2.5 py-1 rounded-md border border-slate-200">${escapeHTML(c.category)}</span>
                     <h3 class="font-bold text-md text-[#0B1F4D] mt-3">${escapeHTML(c.title)}</h3>
                     <p class="text-xs text-slate-500 mt-1.5"><i class="fas fa-chalkboard-teacher ml-1.5 text-[#D4A017]"></i> المدرب: ${escapeHTML(c.trainer)}</p>
-                    <p class="text-xs text-slate-400 mt-0.5"><i class="fas fa-clock ml-1.5 text-slate-400"></i> المدة: ${c.duration || '36 ساعة تدريبية'}</p>
+                    <p class="text-xs text-slate-400 mt-0.5"><i class="fas fa-clock ml-1.5 text-slate-400"></i> المدة: ${escapeHTML(c.duration || '36 ساعة')}</p>
                 </div>
                 <div class="flex justify-between items-end pt-4 border-t border-slate-50 mt-auto">
                     <div class="flex flex-col gap-2 max-w-[60%] w-full">
                         ${c.discount && c.discount.trim() !== '' ? `
                         <div>
                             <span class="block text-[9px] text-rose-500 font-black mb-0.5">السعر قبل الخصم:</span>
-                            <del class="block text-rose-600 font-bold text-[10px] bg-rose-50 px-2 py-1.5 rounded-lg border border-rose-100 leading-snug break-words">${c.discount}</del>
+                            <del class="block text-rose-600 font-bold text-[10px] bg-rose-50 px-2 py-1.5 rounded-lg border border-rose-100 leading-snug break-words">${escapeHTML(c.discount)}</del>
                         </div>
                         ` : ''}
                         <div>
                             <span class="block text-[9px] text-emerald-600 font-black mb-0.5">${c.discount && c.discount.trim() !== '' ? 'السعر بعد الخصم:' : 'رسوم الدورة:'}</span>
-                            <span class="block text-emerald-700 font-extrabold text-[11px] bg-emerald-50 px-2 py-1.5 rounded-lg border border-emerald-100 leading-snug break-words">${c.fee}</span>
+                            <span class="block text-emerald-700 font-extrabold text-[11px] bg-emerald-50 px-2 py-1.5 rounded-lg border border-emerald-100 leading-snug break-words">${escapeHTML(c.fee)}</span>
                         </div>
                     </div>
                     <div class="flex gap-1.5">
-                        <button onclick="openLandingPage('${escapeHTML(c.title)}')" class="bg-slate-100 hover:bg-slate-200 text-[#0B1F4D] text-[10px] font-bold px-2.5 py-2 rounded-lg border border-slate-200 transition cursor-pointer">التفاصيل</button>
-                        <button onclick="selectCourseDirectly('${escapeHTML(c.title)}')" class="bg-[#0B1F4D] hover:bg-[#132F6B] text-white text-[10px] font-bold px-2.5 py-2 rounded-lg shadow-md transition cursor-pointer">سجل الآن</button>
+                        <button onclick="openLandingPage('${jsSafe(c.title)}')" class="bg-slate-100 hover:bg-slate-200 text-[#0B1F4D] text-[10px] font-bold px-2.5 py-2 rounded-lg border border-slate-200 transition cursor-pointer">التفاصيل</button>
+                        <button onclick="selectCourseDirectly('${jsSafe(c.title)}')" class="bg-[#0B1F4D] hover:bg-[#132F6B] text-white text-[10px] font-bold px-2.5 py-2 rounded-lg shadow-md transition cursor-pointer">سجل الآن</button>
                     </div>
                 </div>
             </div>
@@ -365,20 +368,14 @@ function renderCourses(courses) {
             <div class="flex justify-between items-center p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs">
                 <span class="font-bold text-[#0B1F4D] truncate w-1/3">${escapeHTML(c.title)}</span>
                 <div class="flex gap-1">
-                    <button onclick="openDetailsModal('${escapeHTML(c.title)}', event)" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded shadow-sm transition">التفاصيل</button>
-                    <button onclick="openEditCourseModal('${c.id}', '${c.title.replace(/'/g, "\\'")}', '${c.trainer}', '${c.duration}', '${c.fee}', '${c.category}', '${c.discount || ''}')" class="bg-emerald-600 text-white px-2 py-1 rounded shadow-sm">تعديل</button>
-                    <button onclick="deleteCourse('${c.id}')" class="bg-rose-500 text-white px-2 py-1 rounded shadow-sm">حذف</button>
+                    <button onclick="openDetailsModal('${jsSafe(c.title)}', event)" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded shadow-sm transition">التفاصيل</button>
+                    <button onclick="openEditCourseModal('${jsSafe(c.id)}', '${jsSafe(c.title)}', '${jsSafe(c.trainer)}', '${jsSafe(c.duration)}', '${jsSafe(c.fee)}', '${jsSafe(c.category)}', '${jsSafe(c.discount)}')" class="bg-emerald-600 text-white px-2 py-1 rounded shadow-sm">تعديل</button>
+                    <button onclick="deleteCourse('${jsSafe(c.id)}')" class="bg-rose-500 text-white px-2 py-1 rounded shadow-sm">حذف</button>
                 </div>
             </div>`);
         }
     });
 }
-function filterCourses(category) {
-    document.querySelectorAll('#courses-list-container > div').forEach(function(card) {
-        card.style.display = (category === 'all' || card.getAttribute('data-category') === category) ? 'flex' : 'none';
-    });
-}
-
 function updateRegistrationDropdown(courses) {
     var selectBox = document.getElementById('reg-course'); 
     if(!selectBox) return;
@@ -1314,6 +1311,8 @@ function openDetailsModal(title, event) {
                 document.getElementById('det-duration').value = data.duration || '';
                 document.getElementById('det-fee').value = data.fee || '';
             } else { 
+                // 💡 منع الشاشة البيضاء وتنبيه المدير بأن البيانات فارغة
+                alert("تنبيه: لم تقم بإضافة تفاصيل صفحة الهبوط لهذه الدورة حتى الآن. يمكنك تعبئة البيانات الآن وحفظها.");
                 document.getElementById('det-desc').value = '';
                 document.getElementById('det-obj').value = '';
                 document.getElementById('det-syl').value = '';
@@ -1329,7 +1328,6 @@ function openDetailsModal(title, event) {
             alert('خطأ في الاتصال: ' + err);
         });
 }
-
 async function saveCourseDetails(event) {
     var btn = event.currentTarget;
     var originalText = btn.innerText;
@@ -2193,9 +2191,6 @@ function copyOrderID(btnElement) {
         btnElement.classList.remove('bg-emerald-50', 'border-emerald-200');
     }, 2000);
 }
-// ==========================================
-// دالة التسجيل في دورة أخرى
-// ==========================================
 // ==========================================
 // دالة التسجيل في دورة أخرى
 // ==========================================
