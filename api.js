@@ -226,12 +226,25 @@ async function uploadReceipt(base64Data, fileName) {
     return await callAPI('uploadReceipt', { base64Data, fileName });
 }
 // ==========================================
-// دوال تتبع الزوار (للمدير فقط)
+// دوال تتبع الزوار (محدثة لمنع التكرار)
 // ==========================================
 function logVisitorActivity(pageName, sessionId) {
-    // لا نستخدم await لكي لا نؤخر تصفح الزائر، يتم الإرسال في الخلفية
+    // 1. إيقاف الرادار تماماً إذا كان المستخدم مسجل دخول (مدير/مسوق)
+    if (sessionStorage.getItem('loggedIn') === 'true') {
+        return; 
+    }
+
+    // 2. منع تكرار نفس الصفحة لنفس الزائر في نفس الجلسة
+    var cacheKey = 'visited_' + pageName.trim();
+    if (sessionStorage.getItem(cacheKey)) {
+        return; 
+    }
+
+    // 3. حفظ الصفحة في الذاكرة المؤقتة للزائر وإرسالها لجوجل شيت مرة واحدة
+    sessionStorage.setItem(cacheKey, 'true');
     callAPI('logVisit', { pageName, sessionId }).catch(e => console.log(e));
 }
+
 async function fetchVisitorLogs() {
     return await callAPI('fetchVisitorLogs');
 }
