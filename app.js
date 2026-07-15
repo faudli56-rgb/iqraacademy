@@ -604,13 +604,19 @@ function renderVerificationResult(result) {
 // ==========================================
 
 function openLoginModal() { 
-    document.getElementById('loginModal').classList.remove('hidden'); 
+    let loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+        loginModal.classList.remove('hidden'); // إزالة الإخفاء
+        loginModal.classList.add('flex');      // إضافة الظهور ليتم عرضها بشكل صحيح
+    }
 }
-
 function closeLoginModal() { 
-    document.getElementById('loginModal').classList.add('hidden'); 
+    let loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+        loginModal.classList.add('hidden');    // إعادة الإخفاء
+        loginModal.classList.remove('flex');   // إزالة الظهور حتى لا تبقى عالقة كشاشة شفافة
+    }
 }
-
 async function handleLoginSubmit(e) {
     e.preventDefault();
     var btn = document.getElementById('loginSubmitBtn');
