@@ -2328,3 +2328,4 @@ window.addEventListener('popstate', function(event) {
         window.history.pushState({ noBackExitsApp: true }, '');
     }
 });
+
