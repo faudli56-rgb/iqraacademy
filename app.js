@@ -13,7 +13,9 @@ var globalAds = [];
 var currentAdIndex = 0;
 var totalViews = 1482;
 var totalClicks = 342;
-
+function trackButtonClick(buttonName) {
+    console.log("تم الضغط على الزر: " + buttonName);
+}
 function showToast(message, isError = false) {
     const toast = document.createElement('div');
     // استخدام ألوان Tailwind المدعومة في مشروعك
