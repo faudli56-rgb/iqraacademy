@@ -2309,66 +2309,76 @@ async function loadVisitorLogs() {
     }
 }
 // ==========================================
-// نظام القاعة الافتراضية (مصصح وموثوق)
+// نظام القاعة الافتراضية (النسخة المستقرة - تمنع الفصل المفاجئ)
 // ==========================================
 var jitsiApi = null;
 
 function openVirtualRoom(courseName) {
+    // 1. التوجيه لصفحة القاعة وإظهار اللودر
     navigateTo('live-room'); 
     var container = document.getElementById('jitsi-container');
     var loader = document.getElementById('room-loader');
     
-    // تنظيف القاعة القديمة وإظهار اللودر
-    if (jitsiApi) jitsiApi.dispose();
-    if (loader) loader.style.display = 'flex';
-    setTimeout(function() { if(loader) loader.style.display = 'none'; }, 2000);
-
-    var userRole = sessionStorage.getItem('role') || 'student';
-    var userName = sessionStorage.getItem('name') || 'متدرب - ' + Math.floor(Math.random() * 1000);
-    var isModerator = (userRole === 'admin' || userRole === 'trainer' || userRole === 'marketer');
-
-    var domain = 'meet.jit.si';
-    var options = {
-        // 🔴 التعديل السحري هنا: اسم قاعة ثابت بالإنجليزية لتجنب أخطاء السيرفر
-        roomName: 'IqraAcademy_Live_Main_Room_2026', 
-        width: '100%',
-        height: '100%',
-        parentNode: container,
-        userInfo: {
-            displayName: (isModerator ? '👑 ' : '') + userName
-        },
-       configOverwrite: {
-            startWithAudioMuted: true, 
-            startWithVideoMuted: true, 
-            prejoinPageEnabled: false,
-            disableReactions: false,
-            localRecording: { enabled: true, format: 'mp4' },
-            disableDeepLinking: true // 🔴 هذا السطر يجبر القاعة على العمل في متصفح الجوال بدون طلب التطبيق
-        },
-        interfaceConfigOverwrite: {
-            SHOW_JITSI_WATERMARK: false,
-            TOOLBAR_BUTTONS: [
-                'microphone', 'camera', 'desktop', 'fullscreen',
-                'fodeviceselection', 'hangup', 'profile', 'chat', 'settings', 'raisehand',
-                'videoquality', 'filmstrip', 'tileview', 'reactions'
-            ]
-        }
-    };
-
-    if (isModerator) {
-        options.interfaceConfigOverwrite.TOOLBAR_BUTTONS.push('mute-everyone', 'security', 'recording', 'localrecording');
-    } else {
-        options.configOverwrite.remoteVideoMenu = { disableKick: true };
-        options.configOverwrite.disableRemoteMute = true;
+    // تنظيف القاعة القديمة إن وجدت
+    if (jitsiApi) {
+        jitsiApi.dispose();
+        jitsiApi = null;
     }
+    if (loader) loader.style.display = 'flex';
 
-    // بناء القاعة
-    jitsiApi = new JitsiMeetExternalAPI(domain, options);
+    // 2. تأخير نصف ثانية (500ms) حتى يكتمل فتح الصفحة وتتجنب الانهيار (Crash)
+    setTimeout(function() {
+        var userRole = sessionStorage.getItem('role') || 'student';
+        var userName = sessionStorage.getItem('name') || 'متدرب - ' + Math.floor(Math.random() * 1000);
+        var isModerator = (userRole === 'admin' || userRole === 'trainer' || userRole === 'marketer' || userRole === 'assistant');
 
-    jitsiApi.addListener('videoConferenceLeft', function() {
-        closeVirtualRoom();
-        if (!isModerator) {
-            showAttendancePopup(courseName);
+        var domain = 'meet.jit.si';
+        var options = {
+            roomName: 'IqraAcademy_Live_Main_Room_2026', 
+            width: '100%',
+            height: '100%',
+            parentNode: container,
+            userInfo: {
+                // إزالة الرموز التعبيرية التي قد تسبب مشاكل في بعض الجوالات
+                displayName: userName + (isModerator ? ' (إدارة)' : '')
+            },
+            configOverwrite: {
+                startWithAudioMuted: true, 
+                startWithVideoMuted: true, 
+                disableDeepLinking: true, // 🔴 إجبار الجوال على استخدام المتصفح ومنع طلب التطبيق
+                // تم إزالة prejoinPageEnabled لكي يسمح للمتصفح بطلب صلاحية المايك بدون أن يفصل
+            },
+            interfaceConfigOverwrite: {
+                SHOW_JITSI_WATERMARK: false,
+                TOOLBAR_BUTTONS: [
+                    'microphone', 'camera', 'desktop', 'fullscreen',
+                    'fodeviceselection', 'hangup', 'profile', 'chat', 'settings', 'raisehand',
+                    'videoquality', 'filmstrip', 'tileview', 'reactions'
+                ]
+            }
+        };
+
+        // صلاحيات الإدارة
+        if (isModerator) {
+            options.interfaceConfigOverwrite.TOOLBAR_BUTTONS.push('mute-everyone', 'security');
+        } else {
+            options.configOverwrite.remoteVideoMenu = { disableKick: true };
+            options.configOverwrite.disableRemoteMute = true;
         }
-    });
+
+        // 3. بناء القاعة
+        jitsiApi = new JitsiMeetExternalAPI(domain, options);
+
+        // إخفاء اللودر فوراً بعد نجاح الربط
+        if(loader) loader.style.display = 'none';
+
+        // 4. حدث الخروج من القاعة (لإظهار نافذة الحضور)
+        jitsiApi.addListener('videoConferenceLeft', function() {
+            closeVirtualRoom();
+            if (!isModerator) {
+                showAttendancePopup(courseName);
+            }
+        });
+
+    }, 500); // هذا التأخير هو سر استقرار القاعة
 }
