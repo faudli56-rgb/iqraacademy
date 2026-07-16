@@ -2328,9 +2328,9 @@ async function openVirtualRoom(courseName) {
             const res = await callAPI('getLiveRoomStatus');
             if (!res || res.status !== 'مفتوحة') {
                 if (typeof showToast === 'function') {
-                    showToast('✕ القاعة مغلقة حالياً. يرجى الانتظار حتى موعد المحاضرة المعتمد للقبول.', true);
+                    showToast('✕ القاعة مغلقة حالياً. يرجى التواصل مع إدارة الاكاديمية.', true);
                 } else {
-                    alert('✕ عذراً، القاعة الافتراضية مغلقة حالياً. يتم إتاحتها فقط أثناء أوقات المحاضرات الرسمية.');
+                    alert('✕ عذراً، القاعة الافتراضية مغلقة حالياً. يرجى التواصل مع إدارة الاكاديمية.');
                 }
                 return; // إيقاف التشغيل فوراً ومنع فتح واجهة البث
             }
