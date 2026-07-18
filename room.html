@@ -77,13 +77,13 @@
         <!-- القسم الأيمن: منصة العرض -->
         <section id="presentation-section" class="w-full lg:flex-1 relative bg-black flex flex-col aspect-video lg:aspect-auto z-10 transition-all duration-300 shadow-md">
             
-            <!-- زر التكبير الفعلي (مخصص وواضح جداً) -->
+            <!-- زر التكبير الفعلي -->
             <button onclick="toggleVideoFullscreen()" id="btn-fullscreen" class="absolute top-3 left-3 z-[90] bg-[#0B1F4D] px-3 py-1.5 rounded-full flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(0,0,0,0.5)] border border-white/80 cursor-pointer hover:scale-105 transition-transform" style="opacity: 1 !important;">
                 <i class="fas fa-expand" style="color: #ffffff !important; font-size: 11px !important;"></i>
                 <span class="text-white font-bold" style="font-size: 10px !important;">ملء الشاشة</span>
             </button>
 
-            <!-- زر الإيموجي (يمين أعلى) -->
+            <!-- زر الإيموجي -->
             <div class="absolute top-3 right-3 z-[60] bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-3 border border-white/10">
                 <button onclick="triggerReaction('❤️')" class="text-sm hover:scale-125 transition transform">❤️</button>
                 <button onclick="triggerReaction('👏')" class="text-sm hover:scale-125 transition transform">👏</button>
@@ -104,15 +104,23 @@
 
                 <div id="reaction-fly-zone" class="absolute bottom-10 left-4 w-24 h-40 pointer-events-none overflow-hidden z-30"></div>
 
-                <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/90 to-transparent pt-8 pb-1 px-2 flex items-end justify-between pointer-events-none z-20">
-                    <div class="flex flex-col gap-1 w-full">
-                        <div class="flex items-center gap-1.5">
+                <!-- شريط المعلومات وشريط التمرير (Marquee) الذي تم استرجاعه -->
+                <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/90 to-transparent pt-12 pb-2 px-3 lg:px-6 flex items-end justify-between pointer-events-none z-20">
+                    <div class="flex flex-col gap-2 w-full lg:max-w-[80%]">
+                        <div class="flex items-center gap-2">
                             <span class="flex h-2 w-2 relative">
                               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75"></span>
                               <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
                             </span>
                             <span class="text-white font-black text-[9px] bg-rose-600 px-1 py-0.5 rounded tracking-widest">مباشر</span>
                             <h2 id="room-title" class="text-white font-bold text-[10px] lg:text-sm drop-shadow-md truncate">قاعة التدريب التفاعلية</h2>
+                        </div>
+                        <!-- شريط التمرير -->
+                        <div class="w-full overflow-hidden bg-black/50 backdrop-blur-md border-r-2 border-[#D4A017] rounded-l-md pr-2 py-1 flex items-center shadow-inner mt-1">
+                            <i class="fas fa-bullhorn text-[#D4A017] text-[10px] lg:text-xs ml-2"></i>
+                            <marquee behavior="scroll" direction="right" scrollamount="4" class="text-slate-200 text-[10px] lg:text-xs font-bold pt-0.5 w-full">
+                                أهلاً بكم في قاعة البث المباشر لأكاديمية اقرأ | نرجو الالتزام بآداب النقاش والمشاركة الفعالة | مهارة اليوم... مشروع الغد!
+                            </marquee>
                         </div>
                     </div>
                 </div>
@@ -178,9 +186,6 @@
     </main>
 
     <script>
-        // ==========================================
-        // 1. نظام التحقق من رابط المدرب السري
-        // ==========================================
         const urlParams = new URLSearchParams(window.location.search);
         if(urlParams.get('invite') === 'trainer') {
             sessionStorage.setItem('role', 'trainer');
@@ -188,9 +193,6 @@
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
-        // ==========================================
-        // 2. بيانات المستخدم والصلاحيات
-        // ==========================================
         let currentUser = {
             id: sessionStorage.getItem('code') || localStorage.getItem('userCode') || 'S-' + Math.floor(Math.random() * 10000),
             name: sessionStorage.getItem('name') || localStorage.getItem('userName') || sessionStorage.getItem('username') || 'متدرب ضيف',
@@ -207,9 +209,6 @@
             if(document.getElementById('msg-input')) document.getElementById('msg-input').placeholder = "رسالة إدارية للمجموعة...";
         }
 
-        // ==========================================
-        // 3. التبويبات والمحادثة
-        // ==========================================
         function switchInteractionTab(tab) {
             const chatDiv = document.getElementById('interaction-chat');
             const attendDiv = document.getElementById('interaction-attendees');
@@ -281,9 +280,6 @@
             setTimeout(() => el.remove(), 3000); 
         }
 
-        // ==========================================
-        // 4. نظام ملء الشاشة الفعلي (Fullscreen)
-        // ==========================================
         let isVideoFullscreen = false;
         function toggleVideoFullscreen() {
             const section = document.getElementById('presentation-section');
@@ -325,9 +321,6 @@
             }
         }
 
-        // ==========================================
-        // 5. أوامر لوحة الإدارة (Jitsi, يوتيوب, الروابط)
-        // ==========================================
         function toggleAssistantPanel() {
             const panel = document.getElementById('assistant-panel');
             panel.classList.toggle('translate-y-full');
@@ -372,7 +365,6 @@
             document.getElementById('whiteboard-container').classList.add('hidden');
             document.getElementById('jitsi-container').classList.remove('hidden');
             
-            // غرفة موحدة للجميع
             const roomNumber = 'IqraAcademy_Live_Workshop_Official'; 
             const isAdmin = (currentUser.role === 'admin' || currentUser.role === 'trainer' || currentUser.role === 'assistant');
 
@@ -381,17 +373,19 @@
                 parentNode: document.getElementById('jitsi-container'),
                 userInfo: { displayName: currentUser.name },
                 configOverwrite: { 
-                    prejoinPageEnabled: isAdmin, // حل مشكلة التجميد للإدارة فقط
+                    prejoinPageEnabled: true, // تفعيل شاشة التجهيز للجميع لفك تجميد الكاميرا والمايك
                     startWithAudioMuted: true,
                     startWithVideoMuted: true,
                     disableDeepLinking: true
                 },
                 interfaceConfigOverwrite: {
                     SHOW_JITSI_WATERMARK: false,
+                    // أضفنا الإعدادات (settings) للطلاب ليتمكنوا من اختيار المايك الخاص بهم
                     TOOLBAR_BUTTONS: isAdmin ? 
                         ['microphone', 'camera', 'desktop', 'fullscreen', 'profile', 'chat', 'settings', 'raisehand', 'videoquality', 'participants-pane', 'tileview', 'mute-everyone', 'security'] : 
-                        ['microphone', 'camera', 'raisehand', 'fullscreen', 'chat', 'tileview'],
-                    SETTINGS_SECTIONS: isAdmin ? ['devices', 'language', 'moderator', 'profile', 'sounds'] : ['language', 'profile']
+                        ['microphone', 'camera', 'raisehand', 'fullscreen', 'chat', 'tileview', 'settings'],
+                    // أضفنا قسم الأجهزة (devices) للطلاب
+                    SETTINGS_SECTIONS: isAdmin ? ['devices', 'language', 'moderator', 'profile', 'sounds'] : ['devices', 'language', 'profile']
                 }
             };
             
@@ -433,9 +427,7 @@
             }
         }
 
-        // ==========================================
-        // المزامنة الدورية
-        // ==========================================
+        // مزامنة البيانات بين الأجهزة (تعمل بشكل صحيح إذا كان رابط Vercel والسيرفر متصلين)
         setInterval(() => {
             if (messageBatch.length > 0 && typeof callAPI === 'function') {
                 const payload = [...messageBatch];
@@ -452,6 +444,7 @@
                             document.getElementById('yt-iframe').src = `https://www.youtube.com/embed/${vidId}?autoplay=1&modestbranding=1&controls=0&rel=0&playsinline=1`;
                             document.getElementById('no-video-msg').style.display = 'none'; 
                         }
+                        // استقبال أمر تشغيل الورشة من الإدارة للأجهزة الأخرى
                         if (res.state.workshops_active === 'true' && document.getElementById('jitsi-container').classList.contains('hidden')) startWorkshops(true); 
                         else if (res.state.workshops_active === 'false' && !document.getElementById('jitsi-container').classList.contains('hidden')) closeWorkshops(true);
                     }
