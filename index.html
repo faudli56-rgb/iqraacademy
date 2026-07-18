@@ -735,24 +735,20 @@
                 </div>
             </div>
 
-            <div id="tab-settings" class="admin-tab-content hidden">
-                <div class="bg-white p-6 md:p-8 shadow-sm border border-slate-100 rounded-3xl max-w-4xl mx-auto relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-full h-1 bg-gradient-to-l from-[#0B1F4D] to-[#D4A017]"></div>
-                    <h2 class="font-black text-[#0B1F4D] mb-8 text-xl"><i class="fas fa-sliders-h ml-2 text-[#D4A017]"></i>لوحة التحكم العامة للمنصة</h2>
-                    <form id="form-settings" class="space-y-5">
-                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 mb-6 text-right shadow-inner">
+          <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 mb-6 text-right shadow-inner">
     <h3 class="font-black text-[#0B1F4D] text-sm mb-2 flex items-center gap-2">
-        <i class="fas fa-video text-rose-500"></i> التحكم الراداري في القاعة الافتراضية
+        <i class="fas fa-satellite-dish text-rose-500"></i> إعدادات البث المباشر (استوديو الأكاديمية)
     </h3>
-    <p class="text-[11px] text-slate-500 font-bold mb-4">
-        تستطيع حظر أو السماح للطلاب بدخول قاعة المحاضرات الحية لمنع التواجد العبثي خارج أوقات التدريب المعتمدة.
-    </p>
+    <div class="mb-4">
+        <label class="block text-[11px] font-bold text-slate-500 mb-2">رابط يوتيوب للبث (غير المُدرج):</label>
+        <input type="text" id="yt-live-link" placeholder="مثال: https://youtu.be/..." class="w-full text-left p-3 rounded-xl border border-slate-200 focus:border-[#D4A017] outline-none font-sans text-sm" dir="ltr">
+    </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <button type="button" onclick="changeLiveRoomStatus('مفتوحة')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-2 cursor-pointer">
-            <i class="fas fa-lock-open"></i> تفعيل وإتاحة دخول الطلاب الآن
+        <button type="button" onclick="changeLiveRoomStatus('مفتوحة')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-2">
+            <i class="fas fa-play-circle text-lg"></i> إطلاق البث وفتح القاعة للطلاب
         </button>
-        <button type="button" onclick="changeLiveRoomStatus('مغلقة')" class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-2 cursor-pointer">
-            <i class="fas fa-lock"></i> إغلاق القاعة وحظر المتصفحين فوراً
+        <button type="button" onclick="changeLiveRoomStatus('مغلقة')" class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-2">
+            <i class="fas fa-stop-circle text-lg"></i> إغلاق القاعة وإنهاء البث
         </button>
     </div>
 </div>
