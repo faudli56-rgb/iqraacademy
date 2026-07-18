@@ -185,7 +185,18 @@
       // ==========================================
         // إدارة الحالة والصلاحيات والمزامنة المتكاملة
         // ==========================================
-        
+        // -- الكود الجديد: التقاط رابط دعوة المدرب السري --
+        const urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.get('invite') === 'trainer') {
+            sessionStorage.setItem('role', 'trainer');
+            sessionStorage.setItem('name', 'المدرب'); // يمكن للمدرب تغيير اسمه لاحقاً
+            // تنظيف الرابط من المتصفح لكي لا ينسخه طالب بالخطأ
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        // ------------------------------------------------
+
+        let currentUser = {
+            id: sessionStorage.getItem('code') || localStorage.getItem('userCode') || 'S-' + Math.floor(Math.random() * 10000),
         let currentUser = {
             id: sessionStorage.getItem('code') || localStorage.getItem('userCode') || 'S-' + Math.floor(Math.random() * 10000),
             name: sessionStorage.getItem('name') || localStorage.getItem('userName') || sessionStorage.getItem('username') || 'متدرب ضيف',
@@ -440,38 +451,57 @@
             }
         }
 
-        // تشغيل الورش (بإعدادات جديدة تمنع تعليق المايك)
+       // ==========================================
+        // تشغيل الورش بصلاحيات مخصصة (إدارة / طلاب)
+        // ==========================================
         function startWorkshops(isAutoTriggered) {
             document.getElementById('youtube-container').classList.add('hidden');
             document.getElementById('whiteboard-container').classList.add('hidden');
             document.getElementById('jitsi-container').classList.remove('hidden');
             
-            const roomNumber = 'IqraWorkshop_' + (currentUser.id.toString().charCodeAt(currentUser.id.length-1) % 20); 
+            // 1. توحيد اسم الغرفة ليتلاقى فيها الكمبيوتر والجوال وجميع الطلاب
+            const roomNumber = 'IqraAcademy_Live_Workshop_Official'; 
 
-            const domain = 'meet.jit.si';
+            // 2. التحقق من رتبة المستخدم (هل هو إدارة/مدرب أم طالب؟)
+            const isAdmin = (currentUser.role === 'admin' || currentUser.role === 'trainer' || currentUser.role === 'assistant');
+
             const options = {
                 roomName: roomNumber,
                 width: '100%',
                 height: '100%',
                 parentNode: document.getElementById('jitsi-container'),
-                userInfo: { displayName: currentUser.name },
+                userInfo: { 
+                    displayName: currentUser.name
+                },
                 configOverwrite: { 
-                    prejoinPageEnabled: false, // يمنع صفحة الانتظار لكي لا تعلق المايكات
-                    startWithAudioMuted: false, 
-                    startWithVideoMuted: false 
+                    prejoinPageEnabled: isAdmin, // تفعيل صفحة التجهيز للإدارة فقط لتجنب تجميد المايك
+                    startWithAudioMuted: true, // الجميع يدخل والمايك مغلق افتراضياً
+                    startWithVideoMuted: true,
+                    disableDeepLinking: true // منع فتح التطبيق الخارجي
                 },
                 interfaceConfigOverwrite: {
-                    SHOW_JITSI_WATERMARK: false
-                    // أزلنا تقييد الأزرار لتظهر الإعدادات كاملة لك وللطلاب
+                    SHOW_JITSI_WATERMARK: false,
+                    // 3. تخصيص الأزرار: الإدارة ترى كل شيء، الطلاب يرون الأساسيات فقط
+                    TOOLBAR_BUTTONS: isAdmin ? 
+                        [
+                            'microphone', 'camera', 'desktop', 'fullscreen',
+                            'profile', 'chat', 'settings', 'raisehand',
+                            'videoquality', 'participants-pane', 'tileview', 
+                            'mute-everyone', 'security'
+                        ] : 
+                        [
+                            'microphone', 'camera', 'raisehand', 'fullscreen', 'chat', 'tileview'
+                        ],
+                    // إخفاء تبويبات الإعدادات المتقدمة عن الطلاب
+                    SETTINGS_SECTIONS: isAdmin ? ['devices', 'language', 'moderator', 'profile', 'sounds'] : ['language', 'profile']
                 }
             };
             
             if (jitsiApi) jitsiApi.dispose();
-            jitsiApi = new JitsiMeetExternalAPI(domain, options);
-            
-            if(!isAutoTriggered) alert("انتقلنا جميعاً لورش العمل التفاعلية.");
-        }
+            jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', options);
 
+            if(!isAutoTriggered && isAdmin) alert("تم فتح الورشة التفاعلية وتوحيد الغرفة للجميع!");
+        }
         // إغلاق الورش والعودة للبث
         function closeWorkshops(isAutoTriggered) {
             if (jitsiApi) {
@@ -496,10 +526,19 @@
             }
         }
 
-        function generateTrainerLink() {
-            alert("تم نسخ رابط دعوة المدرب. شاركه معه ليدخل بصلاحيات الإدارة.");
+      function generateTrainerLink() {
+            // استخراج رابط القاعة الحالي وإضافة مفتاح الدعوة السري
+            const baseUrl = window.location.href.split('?')[0];
+            const trainerLink = baseUrl + "?invite=trainer";
+            
+            // أمر النسخ الفعلي إلى الحافظة
+            navigator.clipboard.writeText(trainerLink).then(() => {
+                alert("تم النسخ بنجاح! 🔗\n\nالرابط الحقيقي هو:\n" + trainerLink + "\n\nيمكنك الآن لصقه في واتساب وإرساله للمدرب ليدخل بصلاحيات الإدارة.");
+            }).catch(err => {
+                // في حال كان متصفحك يمنع النسخ التلقائي كإجراء أمني
+                prompt("يرجى نسخ الرابط يدوياً من هذا المربع:", trainerLink);
+            });
         }
-
         function endSession() {
             if(confirm("هل ننهي لقاءنا التدريبي اليوم؟")) {
                 if(typeof callAPI === 'function') {
