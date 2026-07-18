@@ -130,7 +130,7 @@
                 <a id="btn-b2b" onclick="navigateTo('b2b')" class="cursor-pointer hover:text-[#D4A017] pb-1 font-bold">خدمات الشركات والمنظمات</a>
                 <a id="btn-news" onclick="navigateTo('news')" class="cursor-pointer hover:text-[#D4A017] pb-1">الأخبار</a>
                 <a id="btn-verification" onclick="navigateTo('verification')" class="cursor-pointer hover:text-[#D4A017] pb-1">فحص الشهادات</a>
-                <a href="room.html" target="_blank" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl font-bold transition shadow-md cursor-pointer flex items-center gap-1">
+                <a onclick="localStorage.setItem('userRole', sessionStorage.getItem('role') || ''); localStorage.setItem('userName', sessionStorage.getItem('name') || sessionStorage.getItem('username') || ''); localStorage.setItem('userCode', sessionStorage.getItem('code') || ''); window.open('room.html', '_blank');" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl font-bold transition shadow-md cursor-pointer flex items-center gap-1">
     <i class="fas fa-video"></i> قاعة الاجتماعات
 </a>
                 <!-- زر الجولة التعليمية -->
@@ -155,7 +155,7 @@
             <a id="btn-news-mob" onclick="navigateTo('news'); toggleMobileMenu()" class="block text-slate-200 hover:text-[#D4A017] py-2 border-b border-slate-800/40 font-semibold cursor-pointer"><i class="fas fa-newspaper ml-3 text-[#D4A017]"></i>الأخبار</a>
             <a id="btn-verification-mob" onclick="navigateTo('verification'); toggleMobileMenu()" class="block text-slate-200 hover:text-[#D4A017] py-2 border-b border-slate-800/40 font-semibold cursor-pointer"><i class="fas fa-award ml-3 text-[#D4A017]"></i>فحص الشهادات</a>
             <a onclick="startOnboardingTour(); toggleMobileMenu()" class="block hover:text-[#D4A017] cursor-pointer transition text-emerald-400 font-bold py-2 border-b border-slate-800/40"><i class="fas fa-info-circle ml-3"></i> جولة تعليمية بالموقع</a>
-          <a href="room.html" target="_blank" onclick="toggleMobileMenu()" class="block bg-rose-500 text-center text-white font-black py-3 rounded-xl shadow-lg mt-4 cursor-pointer flex justify-center items-center gap-2">
+         <a onclick="localStorage.setItem('userRole', sessionStorage.getItem('role') || ''); localStorage.setItem('userName', sessionStorage.getItem('name') || sessionStorage.getItem('username') || ''); localStorage.setItem('userCode', sessionStorage.getItem('code') || ''); window.open('room.html', '_blank'); toggleMobileMenu();" class="block bg-rose-500 text-center text-white font-black py-3 rounded-xl shadow-lg mt-4 cursor-pointer flex justify-center items-center gap-2">
     <i class="fas fa-video"></i> قاعة الاجتماعات
 </a>
             <a onclick="navigateTo('contact'); toggleMobileMenu()" class="block text-slate-200 hover:text-[#D4A017] py-2 border-b border-slate-800/40 font-semibold cursor-pointer"><i class="fas fa-envelope ml-3 text-[#D4A017]"></i>تواصل معنا</a>
