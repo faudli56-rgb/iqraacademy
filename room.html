@@ -8,16 +8,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://meet.jit.si/external_api.js"></script>
     <script src="api.js"></script>
-    // وضع ملء الشاشة للفيديو
-        .video-fullscreen-mode {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100dvh !important;
-            z-index: 99999 !important;
-            background-color: #000 !important;
-        }
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
         body { font-family: 'Tajawal', sans-serif; }
@@ -36,6 +26,16 @@
         }
         .touch-pan-x::-webkit-scrollbar { display: none; }
         .touch-pan-x { -ms-overflow-style: none; scrollbar-width: none; }
+        // وضع ملء الشاشة للفيديو
+        .video-fullscreen-mode {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100dvh !important;
+            z-index: 99999 !important;
+            background-color: #000 !important;
+        }
     </style>
 </head>
 <body class="bg-gray-50 h-[100dvh] flex flex-col overflow-hidden">
