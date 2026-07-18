@@ -8,6 +8,16 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://meet.jit.si/external_api.js"></script>
     <script src="api.js"></script>
+    /* وضع ملء الشاشة للفيديو */
+        .video-fullscreen-mode {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100dvh !important;
+            z-index: 99999 !important;
+            background-color: #000 !important;
+        }
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
         body { font-family: 'Tajawal', sans-serif; }
@@ -59,7 +69,14 @@
     <main class="flex-1 flex flex-col lg:flex-row w-full h-full overflow-hidden relative">
         
         <!-- القسم الأيمن: منصة العرض -->
-        <section class="w-full flex-1 relative bg-black flex flex-col h-[35vh] sm:h-[40vh] lg:h-full group z-0">
+        <section id="presentation-section" class="w-full flex-1 relative bg-black flex flex-col h-[35vh] sm:h-[40vh] lg:h-full group z-0 transition-all duration-300">
+            
+            <!-- زر تكبير الشاشة (Fullscreen) -->
+            <button onclick="toggleVideoFullscreen()" id="btn-fullscreen" class="absolute top-4 left-4 sm:left-40 z-[60] bg-black/50 hover:bg-black/80 text-white w-9 h-9 lg:w-10 lg:h-10 rounded-full flex items-center justify-center transition shadow-lg backdrop-blur-sm border border-white/20 cursor-pointer">
+                <i class="fas fa-expand"></i>
+            </button>
+
+            <div id="youtube-container" class="relative w-full aspect-video lg:aspect-auto lg:h-full overflow-hidden flex items-center justify-center">
             
             <div id="youtube-container" class="relative w-full aspect-video lg:aspect-auto lg:h-full overflow-hidden flex items-center justify-center">
                 
@@ -529,6 +546,28 @@ function switchInteractionTab(tab) {
     }
 }
         window.onload = initApp;
+        // ==========================================
+        // دالة تكبير وتصغير الشاشة (ملء الشاشة)
+        // ==========================================
+        let isVideoFullscreen = false;
+        function toggleVideoFullscreen() {
+            const section = document.getElementById('presentation-section');
+            const icon = document.querySelector('#btn-fullscreen i');
+            
+            isVideoFullscreen = !isVideoFullscreen;
+            
+            if (isVideoFullscreen) {
+                // تفعيل ملء الشاشة
+                section.classList.add('video-fullscreen-mode');
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress'); // تغيير الأيقونة للتصغير
+            } else {
+                // إلغاء ملء الشاشة
+                section.classList.remove('video-fullscreen-mode');
+                icon.classList.remove('fa-compress');
+                icon.classList.add('fa-expand'); // إرجاع الأيقونة للتكبير
+            }
+        }
     </script>
 </body>
 </html>
