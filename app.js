@@ -116,7 +116,13 @@ function popupActionRegister() {
 
 function navigateTo(pageId) {
     // --- 1. التحقق من الشاشات المتراكبة التي تمنع التنقل المباشر ---
-    
+    // 💡 التقاط محاولة الخروج من القاعة الافتراضية عبر القائمة
+    var livePage = document.getElementById('page-live-room');
+    if (livePage && livePage.classList.contains('active') && pageId !== 'live-room') {
+        recordStudentAttendance(); // إرسال الحضور
+        var jitsiCont = document.getElementById('jitsi-container');
+        if(jitsiCont) jitsiCont.innerHTML = ''; // إيقاف الفيديو
+    }
     // أ. التحقق من صفحة تفاصيل الدورة (صفحة الهبوط)
     var landingContainer = document.getElementById('landing-page-container');
     if (landingContainer && !landingContainer.classList.contains('hidden')) {
@@ -2231,13 +2237,15 @@ function registerAnotherCourse() {
 // ==========================================
 // رسالة التنبيه عند محاولة إغلاق الموقع أو التراجع
 // ==========================================
+// رسالة التنبيه عند محاولة إغلاق الموقع أو التراجع
 window.addEventListener('beforeunload', function (e) {
-    // إلغاء الحدث الافتراضي
+    // 💡 تأمين أخير: إذا أغلق الطالب المتصفح فجأة وهو داخل القاعة، يتم تسجيل حضوره فوراً
+    if (currentLiveSession) {
+        recordStudentAttendance();
+    }
+    
     e.preventDefault();
-    
-    // هذا السطر إجباري للمتصفحات الحديثة لكي تظهر رسالة التنبيه الافتراضية
     e.returnValue = ''; 
-    
     return '';
 });
 // ==========================================
@@ -2306,5 +2314,29 @@ async function loadVisitorLogs() {
         }
     } catch(e) {
         tbody.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-rose-600 font-black">خطأ في الاتصال</td></tr>';
+    }
+}
+// متغير لحفظ بيانات جلسة الطالب الحالية
+var currentLiveSession = null;
+
+// دالة تسجيل الحضور وحساب وقت التواجد
+function recordStudentAttendance() {
+    if (currentLiveSession) {
+        var leaveTime = new Date().toISOString();
+        var sessionData = currentLiveSession;
+        currentLiveSession = null; // تفريغ الجلسة لمنع التكرار
+
+        // إرسال البيانات فوراً إلى جوجل شيت
+        callAPI('recordAttendance', {
+            orderId: sessionData.orderId,
+            studentName: sessionData.studentName,
+            course: sessionData.course,
+            joinTime: sessionData.joinTime,
+            leaveTime: leaveTime
+        }).then(res => {
+            if (res && res.success && typeof showToast === 'function') {
+                showToast('✅ تم تسجيل حضورك وحفظ وقت الانصراف بنجاح.');
+            }
+        }).catch(e => console.log('خطأ في تسجيل الحضور:', e));
     }
 }
