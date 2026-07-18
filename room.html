@@ -15,8 +15,7 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .reaction-emoji {
-            position: absolute;
-            bottom: 0; font-size: 2rem; animation: floatUp 3s ease-in-out forwards; opacity: 1; z-index: 50; pointer-events: none;
+            position: absolute; bottom: 0; font-size: 2rem; animation: floatUp 3s ease-in-out forwards; opacity: 1; z-index: 50; pointer-events: none;
         }
         @keyframes floatUp {
             0% { transform: translateY(0) scale(0.5) rotate(0deg); opacity: 0; }
@@ -24,9 +23,9 @@
             80% { opacity: 0.8; }
             100% { transform: translateY(-300px) scale(1) rotate(20deg); opacity: 0; }
         }
-        .touch-pan-x::-webkit-scrollbar { display: none; }
-        .touch-pan-x { -ms-overflow-style: none; scrollbar-width: none; }
-        video-fullscreen-mode {
+        
+        /* وضع ملء الشاشة الفعلي للفيديو */
+        .video-fullscreen-mode {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
@@ -37,8 +36,9 @@
             display: flex !important;
             flex-direction: column !important;
         }
-        .video-fullscreen-mode #yt-iframe, 
-        .video-fullscreen-mode #jitsi-container {
+        .video-fullscreen-mode #youtube-container,
+        .video-fullscreen-mode #jitsi-container,
+        .video-fullscreen-mode #whiteboard-container {
             flex: 1 !important;
             height: 100% !important;
         }
@@ -46,15 +46,15 @@
 </head>
 <body class="bg-gray-50 h-[100dvh] flex flex-col overflow-hidden">
 
-   <!-- شريط التنقل العلوي -->
-    <header class="bg-[#0B1F4D] text-white shadow-md p-3 lg:p-4 flex justify-between items-center z-10 border-b-4 border-[#D4A017]">
+    <!-- شريط التنقل العلوي -->
+    <header class="bg-[#0B1F4D] text-white shadow-md p-3 lg:p-4 flex justify-between items-center z-10 border-b-4 border-[#D4A017] shrink-0">
         <div class="flex items-center gap-2 lg:gap-3">
             <i class="fas fa-graduation-cap text-xl lg:text-2xl text-[#D4A017]"></i>
             <h1 class="text-sm lg:text-xl font-bold truncate">نرحب بكم في قاعتنا التدريبية</h1>
         </div>
         
         <div class="flex gap-1.5 lg:gap-2 items-center">
-            <!-- الزر الجديد: استوديو الإدارة (تم نقله هنا) -->
+            <!-- زر استوديو الإدارة -->
             <button id="btn-show-assistant" onclick="toggleAssistantPanel()" class="hidden bg-gradient-to-r from-yellow-400 to-[#D4A017] text-black px-3 lg:px-4 py-1.5 rounded-lg text-[10px] lg:text-sm font-black shadow-md hover:scale-105 transition-all cursor-pointer">
                 <i class="fas fa-cogs lg:ml-1"></i> <span class="hidden sm:inline">استوديو الإدارة</span><span class="sm:hidden">الإدارة</span>
             </button>
@@ -72,27 +72,25 @@
     </header>
 
     <!-- المحتوى الرئيسي -->
-    <main class="flex-1 flex flex-col lg:flex-row w-full h-full overflow-hidden relative bg-gray-50">
+    <main class="flex-1 flex flex-col lg:flex-row w-full h-full overflow-hidden relative">
         
         <!-- القسم الأيمن: منصة العرض -->
-        <!-- استخدمنا aspect-video للجوال ليكون متناسقاً تماماً كشاشة عرض حقيقية -->
         <section id="presentation-section" class="w-full lg:flex-1 relative bg-black flex flex-col aspect-video lg:aspect-auto z-10 transition-all duration-300 shadow-md">
             
-            <!-- زر تكبير الشاشة (Fullscreen) مع نص وأيقونة -->
-            <button onclick="toggleVideoFullscreen()" id="btn-fullscreen" class="absolute top-3 left-3 z-[100] bg-[#0B1F4D] px-3 py-1.5 rounded-full flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(0,0,0,0.5)] border border-white/80 cursor-pointer hover:scale-105 transition-transform" style="opacity: 1 !important;">
+            <!-- زر التكبير الفعلي (مخصص وواضح جداً) -->
+            <button onclick="toggleVideoFullscreen()" id="btn-fullscreen" class="absolute top-3 left-3 z-[90] bg-[#0B1F4D] px-3 py-1.5 rounded-full flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(0,0,0,0.5)] border border-white/80 cursor-pointer hover:scale-105 transition-transform" style="opacity: 1 !important;">
                 <i class="fas fa-expand" style="color: #ffffff !important; font-size: 11px !important;"></i>
                 <span class="text-white font-bold" style="font-size: 10px !important;">ملء الشاشة</span>
             </button>
 
-            <!-- زر الإيموجي (تم نقله للأعلى يمين لكي لا يزحم الشاشة من الأسفل) -->
-            <div class="absolute top-2 right-2 z-[60] bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-3 border border-white/10">
+            <!-- زر الإيموجي (يمين أعلى) -->
+            <div class="absolute top-3 right-3 z-[60] bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-3 border border-white/10">
                 <button onclick="triggerReaction('❤️')" class="text-sm hover:scale-125 transition transform">❤️</button>
                 <button onclick="triggerReaction('👏')" class="text-sm hover:scale-125 transition transform">👏</button>
                 <button onclick="triggerReaction('✋')" class="text-sm hover:scale-125 transition transform">✋</button>
                 <button onclick="triggerReaction('💡')" class="text-sm hover:scale-125 transition transform">💡</button>
             </div>
 
-            <!-- حاوية يوتيوب -->
             <div id="youtube-container" class="relative w-full h-full overflow-hidden flex items-center justify-center bg-black">
                 
                 <div id="no-video-msg" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 z-0">
@@ -104,10 +102,8 @@
                     src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen">
                 </iframe>
 
-                <!-- منطقة تطاير التفاعلات -->
                 <div id="reaction-fly-zone" class="absolute bottom-10 left-4 w-24 h-40 pointer-events-none overflow-hidden z-30"></div>
 
-                <!-- شريط المعلومات (مدمج وصغير جداً في الجوال لكي لا يغطي الفيديو) -->
                 <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/90 to-transparent pt-8 pb-1 px-2 flex items-end justify-between pointer-events-none z-20">
                     <div class="flex flex-col gap-1 w-full">
                         <div class="flex items-center gap-1.5">
@@ -130,15 +126,15 @@
             <div id="jitsi-container" class="hidden absolute inset-0 w-full h-full bg-gray-800 z-40"></div>
         </section>
 
-        <!-- القسم الأيسر: لوحة التفاعل (الدردشة والحضور) -->
+        <!-- القسم الأيسر: لوحة التفاعل -->
         <aside class="flex-1 lg:w-[380px] lg:flex-none bg-white border-t lg:border-t-0 lg:border-l flex flex-col shadow-inner z-20 relative overflow-hidden">
-            <!-- تبويبات التفاعل -->
+            
             <div class="flex border-b text-center font-bold text-xs lg:text-sm text-[#0B1F4D] bg-blue-50 shadow-sm shrink-0">
                 <button onclick="switchInteractionTab('chat')" id="tab-chat-btn" class="flex-1 py-2.5 border-b-2 border-[#0B1F4D]">الدردشة</button>
                 <button onclick="switchInteractionTab('attendees')" id="tab-attend-btn" class="flex-1 py-2.5 border-b-2 border-transparent text-gray-500">الحضور (<span id="attendee-count">0</span>)</button>
             </div>
 
-            <!-- منطقة الدردشة -->
+            <!-- الدردشة -->
             <div id="interaction-chat" class="flex-1 flex flex-col h-full overflow-hidden">
                 <div id="messages-area" class="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50">
                     <div class="text-center text-[10px] text-slate-400 my-2">-- بداية المحادثة --</div>
@@ -153,18 +149,18 @@
                 </div>
             </div>
 
-            <!-- منطقة الحضور -->
+            <!-- الحضور -->
             <div id="interaction-attendees" class="hidden flex-1 overflow-y-auto p-3 bg-slate-50">
                 <ul id="attendees-list" class="space-y-2 text-xs text-slate-700"></ul>
             </div>
             
-            <!-- لوحة تحكم المساعد (للمشرفين فقط) -->
+            <!-- لوحة المساعد -->
             <div id="assistant-panel" class="hidden absolute bottom-0 left-0 w-full bg-slate-800 text-white p-3 lg:p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.2)] transform translate-y-full transition-transform duration-300 rounded-t-xl z-50">
                 <div class="flex justify-between items-center mb-3 border-b border-slate-600 pb-2">
                     <h3 class="font-bold text-[11px] lg:text-xs"><i class="fas fa-tools text-[#D4A017]"></i> استوديو الإدارة</h3>
                     <button onclick="toggleAssistantPanel()" class="text-gray-400 hover:text-white transition p-1"><i class="fas fa-times text-sm"></i></button>
                 </div>
-                <div class="grid grid-cols-2 gap-2 text-[10px] font-bold mb-3">
+                <div class="grid grid-cols-2 gap-2 text-[10px] lg:text-xs font-bold mb-3">
                     <button onclick="triggerWorkshopsStatusForEveryone(true)" class="bg-indigo-600 p-2 rounded-lg hover:bg-indigo-500 transition shadow">تشغيل الورش <i class="fas fa-users ml-1"></i></button>
                     <button onclick="triggerWorkshopsStatusForEveryone(false)" class="bg-slate-500 p-2 rounded-lg hover:bg-slate-400 transition shadow text-white">إيقاف الورش <i class="fas fa-undo ml-1"></i></button>
                     <button onclick="generateTrainerLink()" class="bg-teal-600 p-2 rounded-lg hover:bg-teal-500 transition shadow">دعوة مدرب <i class="fas fa-link ml-1"></i></button>
@@ -182,136 +178,52 @@
     </main>
 
     <script>
-      // ==========================================
-        // إدارة الحالة والصلاحيات والمزامنة المتكاملة
         // ==========================================
-        // -- الكود الجديد: التقاط رابط دعوة المدرب السري --
+        // 1. نظام التحقق من رابط المدرب السري
+        // ==========================================
         const urlParams = new URLSearchParams(window.location.search);
         if(urlParams.get('invite') === 'trainer') {
             sessionStorage.setItem('role', 'trainer');
-            sessionStorage.setItem('name', 'المدرب'); // يمكن للمدرب تغيير اسمه لاحقاً
-            // تنظيف الرابط من المتصفح لكي لا ينسخه طالب بالخطأ
+            sessionStorage.setItem('name', 'المدرب');
             window.history.replaceState({}, document.title, window.location.pathname);
         }
-        // ------------------------------------------------
 
-        let currentUser = {
-            id: sessionStorage.getItem('code') || localStorage.getItem('userCode') || 'S-' + Math.floor(Math.random() * 10000),
+        // ==========================================
+        // 2. بيانات المستخدم والصلاحيات
+        // ==========================================
         let currentUser = {
             id: sessionStorage.getItem('code') || localStorage.getItem('userCode') || 'S-' + Math.floor(Math.random() * 10000),
             name: sessionStorage.getItem('name') || localStorage.getItem('userName') || sessionStorage.getItem('username') || 'متدرب ضيف',
             role: sessionStorage.getItem('role') || localStorage.getItem('userRole') || 'student'
         };
 
-        // --- التنفيذ الفوري لظهور الزر (بدون أي تأخير) ---
-        if (currentUser.role === 'admin' || currentUser.role === 'assistant' || currentUser.role === 'marketer' || currentUser.role === 'trainer') {
-            document.getElementById('btn-show-assistant').classList.remove('hidden');
-            if(document.getElementById('msg-input')) {
-                document.getElementById('msg-input').placeholder = "رسالة إدارية للمجموعة...";
-            }
-        } else {
-            currentLiveSession = {
-                orderId: currentUser.id,
-                studentName: currentUser.name,
-                course: 'قاعة التدريب التفاعلية',
-                joinTime: new Date().toISOString()
-            };
-        }
-        // ----------------------------------------------
-
-        let isDataSaver = false;
         let messageBatch = []; 
         let jitsiApi = null;
         let lastSyncedMsgId = 0; 
         let currentRoomState = { live_yt_id: "", workshops_active: "false" };
 
-        function initApp() {
-            // بدأنا المزامنة فقط هنا
-            setInterval(flushMessageBatch, 5000); 
-            setInterval(syncWithServer, 5000); 
-            syncWithServer();
-        }
-        
-        // استدعاء المزامنة
-        initApp();
-
-        function getYouTubeID(url) {
-            if(!url) return null;
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : url; 
-        }
-
-        function recordStudentAttendance() {
-            if (currentLiveSession) {
-                var leaveTime = new Date().toISOString();
-                var sessionData = currentLiveSession;
-                currentLiveSession = null; 
-                if(typeof callAPI === 'function') {
-                    callAPI('recordAttendance', {
-                        orderId: sessionData.orderId,
-                        studentName: sessionData.studentName,
-                        course: sessionData.course,
-                        joinTime: sessionData.joinTime,
-                        leaveTime: leaveTime
-                    }).catch(e => console.log(e));
-                }
-            }
-        }
-
-        window.addEventListener('beforeunload', function (e) {
-            if (currentLiveSession) recordStudentAttendance();
-        });
-
-        function flushMessageBatch() {
-            if (messageBatch.length === 0) return;
-            const payload = [...messageBatch];
-            messageBatch = []; 
-            if(typeof callAPI === 'function') {
-                callAPI('saveChatBatch', { messages: payload }).catch(err => { messageBatch.push(...payload); });
-            }
-        }
-
-        async function syncWithServer() {
-            if(typeof callAPI !== 'function') return;
-            try {
-                const res = await callAPI('syncRoomState', { lastMsgId: lastSyncedMsgId });
-                if (res && res.success) {
-                    if (res.messages && res.messages.length > 0) {
-                        res.messages.forEach(msg => {
-                            if (msg.sender !== currentUser.name) displayMessage(msg);
-                            lastSyncedMsgId = Math.max(lastSyncedMsgId, msg.id);
-                        });
-                    }
-
-                    const iframe = document.getElementById('yt-iframe');
-                    const noVideoMsg = document.getElementById('no-video-msg');
-                    
-                    if (res.state.live_yt_id && currentRoomState.live_yt_id !== res.state.live_yt_id) {
-                        currentRoomState.live_yt_id = res.state.live_yt_id;
-                        let vidId = getYouTubeID(res.state.live_yt_id);
-                        if(vidId) {
-                            iframe.src = `https://www.youtube.com/embed/${vidId}?autoplay=1&modestbranding=1&controls=0&rel=0&playsinline=1`;
-                            noVideoMsg.style.display = 'none'; 
-                            iframe.style.zIndex = '10'; 
-                        }
-                    } else if (!res.state.live_yt_id && !currentRoomState.live_yt_id) {
-                        iframe.style.zIndex = '0';
-                    }
-
-                    // مزامنة حالة الورش (تشغيل أو إيقاف)
-                    if (res.state.workshops_active === 'true' && document.getElementById('jitsi-container').classList.contains('hidden')) {
-                        startWorkshops(true); 
-                    } else if (res.state.workshops_active === 'false' && !document.getElementById('jitsi-container').classList.contains('hidden')) {
-                        closeWorkshops(true);
-                    }
-                }
-            } catch (e) { console.log(e); }
+        if (currentUser.role === 'admin' || currentUser.role === 'assistant' || currentUser.role === 'marketer' || currentUser.role === 'trainer') {
+            document.getElementById('btn-show-assistant').classList.remove('hidden');
+            if(document.getElementById('msg-input')) document.getElementById('msg-input').placeholder = "رسالة إدارية للمجموعة...";
         }
 
         // ==========================================
-        // التفاعل والدردشة
+        // 3. التبويبات والمحادثة
         // ==========================================
+        function switchInteractionTab(tab) {
+            const chatDiv = document.getElementById('interaction-chat');
+            const attendDiv = document.getElementById('interaction-attendees');
+            const chatBtn = document.getElementById('tab-chat-btn');
+            const attendBtn = document.getElementById('tab-attend-btn');
+
+            if (tab === 'chat') {
+                chatDiv.classList.remove('hidden'); attendDiv.classList.add('hidden');
+                chatBtn.classList.add('border-[#0B1F4D]'); attendBtn.classList.remove('border-[#0B1F4D]');
+            } else {
+                chatDiv.classList.add('hidden'); attendDiv.classList.remove('hidden');
+                attendBtn.classList.add('border-[#0B1F4D]'); chatBtn.classList.remove('border-[#0B1F4D]');
+            }
+        }
 
         function sendMessage() {
             const input = document.getElementById('msg-input');
@@ -319,200 +231,180 @@
             if (!text) return;
 
             const msgObj = {
-                id: Date.now(),
-                sender: currentUser.name,
-                text: text, 
-                type: 'chat',
-                upvotes: 0,
+                id: Date.now(), sender: currentUser.name, text: text, type: 'chat',
                 timestamp: new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})
             };
 
             displayMessage(msgObj);
             input.value = '';
-            checkBotKeywords(text);
             messageBatch.push(msgObj);
         }
 
         function displayMessage(msg) {
             const area = document.getElementById('messages-area');
             const div = document.createElement('div');
-            div.className = "bg-white p-3 rounded-xl shadow-sm border border-slate-100";
+            div.className = "bg-white p-2 lg:p-3 rounded-lg shadow-sm border border-slate-100";
             
             const header = document.createElement('div');
-            header.className = "flex justify-between items-center mb-1.5";
+            header.className = "flex justify-between items-center mb-1";
             
             const senderSpan = document.createElement('span');
-            senderSpan.className = "font-bold text-xs text-[#0B1F4D]";
-            if (msg.sender.includes('إدارة') || msg.sender === 'المساعد الآلي') {
+            senderSpan.className = "font-bold text-[11px] lg:text-xs text-[#0B1F4D]";
+            if (msg.sender.includes('إدارة') || msg.sender === 'المدرب' || msg.sender === 'المساعد الآلي') {
                 senderSpan.innerHTML = `<i class="fas fa-shield-alt text-[#D4A017] ml-1"></i> ${msg.sender}`;
             } else {
                 senderSpan.textContent = msg.sender;
             }
             
             const timeSpan = document.createElement('span');
-            timeSpan.className = "text-[10px] text-gray-400 font-mono";
+            timeSpan.className = "text-[9px] lg:text-[10px] text-gray-400 font-mono";
             timeSpan.textContent = msg.timestamp;
 
             header.appendChild(senderSpan);
             header.appendChild(timeSpan);
             
             const bodyP = document.createElement('p');
-            bodyP.className = "text-xs lg:text-sm text-slate-700 leading-relaxed";
+            bodyP.className = "text-[11px] lg:text-sm text-slate-700 leading-relaxed";
             bodyP.textContent = msg.text; 
 
-            div.appendChild(header);
-            div.appendChild(bodyP);
-
-            area.appendChild(div);
-            area.scrollTop = area.scrollHeight;
-        }
-
-        function checkBotKeywords(text) {
-            const keywords = ['مسجلة', 'رابط', 'شهادة', 'الصوت'];
-            const found = keywords.some(kw => text.includes(kw));
-            if (found) {
-                setTimeout(() => {
-                    displayMessage({
-                        sender: 'المساعد الآلي',
-                        text: 'نعم، لقاؤنا مسجل وسنشاركه معكم لاحقاً. وتصدر الشهادات بعد الاجتياز. إذا واجهت مشكلة بالصوت جرب زر "تحديث" بالأعلى.',
-                        type: 'chat',
-                        timestamp: new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})
-                    });
-                }, 1000);
-            }
+            div.appendChild(header); div.appendChild(bodyP);
+            area.appendChild(div); area.scrollTop = area.scrollHeight;
         }
 
         function triggerReaction(emoji) {
             const zone = document.getElementById('reaction-fly-zone');
             if (!zone) return;
             const el = document.createElement('div');
-            el.className = 'reaction-emoji';
-            el.innerText = emoji;
+            el.className = 'reaction-emoji'; el.innerText = emoji;
             el.style.left = Math.random() * 70 + '%'; 
             zone.appendChild(el);
             setTimeout(() => el.remove(), 3000); 
         }
 
         // ==========================================
-        // عمليات المشرفين والورش
+        // 4. نظام ملء الشاشة الفعلي (Fullscreen)
         // ==========================================
-        function refreshStream() {
-            const iframe = document.getElementById('yt-iframe');
-            iframe.src = iframe.src; 
-        }
-
-        function toggleDataSaver() {
-            isDataSaver = !isDataSaver;
-            const iframe = document.getElementById('yt-iframe');
-            const overlay = document.getElementById('audio-only-overlay');
-            const btn = document.getElementById('btn-data-saver');
-
-            if (isDataSaver) {
-                iframe.classList.add('hidden-visually');
-                overlay.classList.remove('hidden');
-                btn.classList.replace('bg-emerald-600', 'bg-yellow-600');
+        let isVideoFullscreen = false;
+        function toggleVideoFullscreen() {
+            const section = document.getElementById('presentation-section');
+            const icon = document.querySelector('#btn-fullscreen i');
+            const text = document.querySelector('#btn-fullscreen span');
+            
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                if (section.requestFullscreen) section.requestFullscreen();
+                else if (section.webkitRequestFullscreen) section.webkitRequestFullscreen();
+                else if (section.msRequestFullscreen) section.msRequestFullscreen();
+                
+                section.classList.add('video-fullscreen-mode');
+                icon.classList.replace('fa-expand', 'fa-compress');
+                if(text) text.innerText = "تصغير";
+                isVideoFullscreen = true;
             } else {
-                iframe.classList.remove('hidden-visually');
-                overlay.classList.add('hidden');
-                btn.classList.replace('bg-yellow-600', 'bg-emerald-600');
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if (document.msExitFullscreen) document.msExitFullscreen();
+                
+                section.classList.remove('video-fullscreen-mode');
+                icon.classList.replace('fa-compress', 'fa-expand');
+                if(text) text.innerText = "ملء الشاشة";
+                isVideoFullscreen = false;
             }
         }
 
-        function toggleWhiteboard() {
-            const wb = document.getElementById('whiteboard-container');
-            if (wb.classList.contains('hidden')) {
-                wb.classList.remove('hidden');
-            } else {
-                wb.classList.add('hidden');
+        document.addEventListener('fullscreenchange', exitHandler);
+        document.addEventListener('webkitfullscreenchange', exitHandler);
+        function exitHandler() {
+            if (!document.fullscreenElement && !document.webkitIsFullScreen) {
+                const section = document.getElementById('presentation-section');
+                const icon = document.querySelector('#btn-fullscreen i');
+                const text = document.querySelector('#btn-fullscreen span');
+                section.classList.remove('video-fullscreen-mode');
+                if(icon) icon.classList.replace('fa-compress', 'fa-expand');
+                if(text) text.innerText = "ملء الشاشة";
+                isVideoFullscreen = false;
             }
         }
 
+        // ==========================================
+        // 5. أوامر لوحة الإدارة (Jitsi, يوتيوب, الروابط)
+        // ==========================================
         function toggleAssistantPanel() {
             const panel = document.getElementById('assistant-panel');
             panel.classList.toggle('translate-y-full');
             panel.classList.toggle('hidden');
         }
 
-        // الدالة المحدثة لتشغيل أو إيقاف الورش
+        function toggleWhiteboard() {
+            const wb = document.getElementById('whiteboard-container');
+            wb.classList.toggle('hidden');
+        }
+
+        function refreshStream() {
+            const iframe = document.getElementById('yt-iframe');
+            iframe.src = iframe.src; 
+        }
+
+        function generateTrainerLink() {
+            const baseUrl = window.location.href.split('?')[0];
+            const trainerLink = baseUrl + "?invite=trainer";
+            navigator.clipboard.writeText(trainerLink).then(() => {
+                alert("تم النسخ بنجاح! 🔗\n\nالرابط الحقيقي هو:\n" + trainerLink);
+            }).catch(() => {
+                prompt("يرجى نسخ الرابط يدوياً من هنا:", trainerLink);
+            });
+        }
+
         function triggerWorkshopsStatusForEveryone(start) {
-            const msg = start ? 'هل أنت متأكد من نقل الجميع لورش العمل؟' : 'هل أنت متأكد من إغلاق الورش وإعادة الجميع للبث الرئيسي؟';
+            const msg = start ? 'بدء ورشة التفاعل للجميع؟' : 'إغلاق الورش والعودة للبث الرئيسي؟';
             if (confirm(msg)) {
                 if(typeof callAPI === 'function') {
                     callAPI('updateRoomSettings', { key: 'workshops_active', value: start ? 'true' : 'false' }).then(() => {
-                        if(start) {
-                            startWorkshops(false);
-                            alert("تم إرسال أمر تقسيم الورش للجميع.");
-                        } else {
-                            closeWorkshops(false);
-                            alert("تم إرسال أمر العودة للبث لجميع المتدربين.");
-                        }
+                        if(start) startWorkshops(false); else closeWorkshops(false);
                     });
+                } else {
+                    if(start) startWorkshops(false); else closeWorkshops(false);
                 }
             }
         }
 
-       // ==========================================
-        // تشغيل الورش بصلاحيات مخصصة (إدارة / طلاب)
-        // ==========================================
         function startWorkshops(isAutoTriggered) {
             document.getElementById('youtube-container').classList.add('hidden');
             document.getElementById('whiteboard-container').classList.add('hidden');
             document.getElementById('jitsi-container').classList.remove('hidden');
             
-            // 1. توحيد اسم الغرفة ليتلاقى فيها الكمبيوتر والجوال وجميع الطلاب
+            // غرفة موحدة للجميع
             const roomNumber = 'IqraAcademy_Live_Workshop_Official'; 
-
-            // 2. التحقق من رتبة المستخدم (هل هو إدارة/مدرب أم طالب؟)
             const isAdmin = (currentUser.role === 'admin' || currentUser.role === 'trainer' || currentUser.role === 'assistant');
 
             const options = {
-                roomName: roomNumber,
-                width: '100%',
-                height: '100%',
+                roomName: roomNumber, width: '100%', height: '100%',
                 parentNode: document.getElementById('jitsi-container'),
-                userInfo: { 
-                    displayName: currentUser.name
-                },
+                userInfo: { displayName: currentUser.name },
                 configOverwrite: { 
-                    prejoinPageEnabled: isAdmin, // تفعيل صفحة التجهيز للإدارة فقط لتجنب تجميد المايك
-                    startWithAudioMuted: true, // الجميع يدخل والمايك مغلق افتراضياً
+                    prejoinPageEnabled: isAdmin, // حل مشكلة التجميد للإدارة فقط
+                    startWithAudioMuted: true,
                     startWithVideoMuted: true,
-                    disableDeepLinking: true // منع فتح التطبيق الخارجي
+                    disableDeepLinking: true
                 },
                 interfaceConfigOverwrite: {
                     SHOW_JITSI_WATERMARK: false,
-                    // 3. تخصيص الأزرار: الإدارة ترى كل شيء، الطلاب يرون الأساسيات فقط
                     TOOLBAR_BUTTONS: isAdmin ? 
-                        [
-                            'microphone', 'camera', 'desktop', 'fullscreen',
-                            'profile', 'chat', 'settings', 'raisehand',
-                            'videoquality', 'participants-pane', 'tileview', 
-                            'mute-everyone', 'security'
-                        ] : 
-                        [
-                            'microphone', 'camera', 'raisehand', 'fullscreen', 'chat', 'tileview'
-                        ],
-                    // إخفاء تبويبات الإعدادات المتقدمة عن الطلاب
+                        ['microphone', 'camera', 'desktop', 'fullscreen', 'profile', 'chat', 'settings', 'raisehand', 'videoquality', 'participants-pane', 'tileview', 'mute-everyone', 'security'] : 
+                        ['microphone', 'camera', 'raisehand', 'fullscreen', 'chat', 'tileview'],
                     SETTINGS_SECTIONS: isAdmin ? ['devices', 'language', 'moderator', 'profile', 'sounds'] : ['language', 'profile']
                 }
             };
             
             if (jitsiApi) jitsiApi.dispose();
             jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', options);
-
-            if(!isAutoTriggered && isAdmin) alert("تم فتح الورشة التفاعلية وتوحيد الغرفة للجميع!");
+            if(!isAutoTriggered && isAdmin) alert("تم فتح الورشة التفاعلية وتوحيد الغرفة!");
         }
-        // إغلاق الورش والعودة للبث
+
         function closeWorkshops(isAutoTriggered) {
-            if (jitsiApi) {
-                jitsiApi.dispose(); // إغلاق الاتصال بالغرف
-                jitsiApi = null;
-            }
+            if (jitsiApi) { jitsiApi.dispose(); jitsiApi = null; }
             document.getElementById('jitsi-container').classList.add('hidden');
             document.getElementById('whiteboard-container').classList.add('hidden');
             document.getElementById('youtube-container').classList.remove('hidden');
-            
-            // تحديث البث تلقائياً لضمان عودته بشكل سليم
             if(isAutoTriggered) refreshStream(); 
         }
 
@@ -520,122 +412,53 @@
             const newId = document.getElementById('emergency-link').value.trim();
             if(newId && typeof callAPI === 'function') {
                 callAPI('updateRoomSettings', { key: 'live_yt_id', value: newId }).then(() => {
-                    alert("تم تحديث مسار بثنا بنجاح للجميع.");
+                    alert("تم تحديث مسار بث يوتيوب بنجاح.");
                     toggleAssistantPanel();
                 });
             }
         }
 
-      function generateTrainerLink() {
-            // استخراج رابط القاعة الحالي وإضافة مفتاح الدعوة السري
-            const baseUrl = window.location.href.split('?')[0];
-            const trainerLink = baseUrl + "?invite=trainer";
-            
-            // أمر النسخ الفعلي إلى الحافظة
-            navigator.clipboard.writeText(trainerLink).then(() => {
-                alert("تم النسخ بنجاح! 🔗\n\nالرابط الحقيقي هو:\n" + trainerLink + "\n\nيمكنك الآن لصقه في واتساب وإرساله للمدرب ليدخل بصلاحيات الإدارة.");
-            }).catch(err => {
-                // في حال كان متصفحك يمنع النسخ التلقائي كإجراء أمني
-                prompt("يرجى نسخ الرابط يدوياً من هذا المربع:", trainerLink);
-            });
-        }
         function endSession() {
-            if(confirm("هل ننهي لقاءنا التدريبي اليوم؟")) {
+            if(confirm("هل ننهي اللقاء للجميع؟")) {
                 if(typeof callAPI === 'function') {
                     callAPI('updateRoomSettings', { key: 'live_yt_id', value: '' }); 
                     callAPI('updateRoomSettings', { key: 'workshops_active', value: 'false' });
                 }
-                recordStudentAttendance();
                 document.body.innerHTML = `
                     <div class="h-screen flex flex-col items-center justify-center bg-[#0B1F4D] text-white text-center px-4">
-                        <i class="fas fa-check-circle text-5xl lg:text-6xl text-emerald-400 mb-6 drop-shadow-lg"></i>
-                        <h1 class="text-2xl lg:text-3xl font-black mb-3">شكراً لجهودكم معنا</h1>
-                        <p class="text-blue-200 text-xs lg:text-sm">تم حفظ وتسجيل لقائنا التدريبي بنجاح في سجلات أكاديمية اقرأ.</p>
-                        <button onclick="window.close()" class="mt-8 bg-white text-[#0B1F4D] px-6 lg:px-8 py-2.5 lg:py-3 rounded-xl font-bold shadow-lg hover:bg-slate-100 transition text-sm">العودة للرئيسية</button>
+                        <i class="fas fa-check-circle text-5xl lg:text-6xl text-emerald-400 mb-6"></i>
+                        <h1 class="text-2xl lg:text-3xl font-black mb-3">شكراً لجهودكم</h1>
+                        <p class="text-blue-200 text-xs lg:text-sm">انتهى اللقاء التدريبي بنجاح.</p>
                     </div>`;
             }
         }
-function switchInteractionTab(tab) {
-    const chatDiv = document.getElementById('interaction-chat');
-    const attendDiv = document.getElementById('interaction-attendees');
-    const chatBtn = document.getElementById('tab-chat-btn');
-    const attendBtn = document.getElementById('tab-attend-btn');
 
-    if (tab === 'chat') {
-        chatDiv.classList.remove('hidden'); attendDiv.classList.add('hidden');
-        chatBtn.classList.add('border-[#0B1F4D]'); attendBtn.classList.remove('border-[#0B1F4D]');
-    } else {
-        chatDiv.classList.add('hidden'); attendDiv.classList.remove('hidden');
-        attendBtn.classList.add('border-[#0B1F4D]'); chatBtn.classList.remove('border-[#0B1F4D]');
-    }
-}
-        window.onload = initApp;
-       // ==========================================
-        // دالة تكبير وتصغير الشاشة (ملء الشاشة الفعلي للنظام)
         // ==========================================
-        let isVideoFullscreen = false;
-        
-        function toggleVideoFullscreen() {
-            const section = document.getElementById('presentation-section');
-            const icon = document.querySelector('#btn-fullscreen i');
-            const text = document.querySelector('#btn-fullscreen span');
-            
-            // التحقق مما إذا كانت الشاشة مكبرة بالفعل أم لا
-            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-                // أمر تشغيل ملء الشاشة الفعلي (يدعم كل المتصفحات)
-                if (section.requestFullscreen) {
-                    section.requestFullscreen();
-                } else if (section.webkitRequestFullscreen) { /* Safari */
-                    section.webkitRequestFullscreen();
-                } else if (section.msRequestFullscreen) { /* IE11 */
-                    section.msRequestFullscreen();
-                }
-                
-                // تغيير شكل الزر إلى "تصغير"
-                section.classList.add('video-fullscreen-mode');
-                icon.classList.remove('fa-expand');
-                icon.classList.add('fa-compress');
-                if(text) text.innerText = "تصغير";
-                isVideoFullscreen = true;
-                
-            } else {
-                // أمر الخروج من ملء الشاشة
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) { /* Safari */
-                    document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) { /* IE11 */
-                    document.msExitFullscreen();
-                }
-                
-                // إرجاع شكل الزر الأساسي
-                section.classList.remove('video-fullscreen-mode');
-                icon.classList.remove('fa-compress');
-                icon.classList.add('fa-expand');
-                if(text) text.innerText = "ملء الشاشة";
-                isVideoFullscreen = false;
+        // المزامنة الدورية
+        // ==========================================
+        setInterval(() => {
+            if (messageBatch.length > 0 && typeof callAPI === 'function') {
+                const payload = [...messageBatch];
+                messageBatch = []; 
+                callAPI('saveChatBatch', { messages: payload }).catch(() => messageBatch.push(...payload));
             }
-        }
+            if (typeof callAPI === 'function') {
+                callAPI('syncRoomState', { lastMsgId: lastSyncedMsgId }).then(res => {
+                    if (res && res.success) {
+                        if (res.messages) res.messages.forEach(msg => { if (msg.sender !== currentUser.name) displayMessage(msg); lastSyncedMsgId = Math.max(lastSyncedMsgId, msg.id); });
+                        if (res.state.live_yt_id && currentRoomState.live_yt_id !== res.state.live_yt_id) {
+                            currentRoomState.live_yt_id = res.state.live_yt_id;
+                            let vidId = res.state.live_yt_id;
+                            document.getElementById('yt-iframe').src = `https://www.youtube.com/embed/${vidId}?autoplay=1&modestbranding=1&controls=0&rel=0&playsinline=1`;
+                            document.getElementById('no-video-msg').style.display = 'none'; 
+                        }
+                        if (res.state.workshops_active === 'true' && document.getElementById('jitsi-container').classList.contains('hidden')) startWorkshops(true); 
+                        else if (res.state.workshops_active === 'false' && !document.getElementById('jitsi-container').classList.contains('hidden')) closeWorkshops(true);
+                    }
+                }).catch(e => console.log(e));
+            }
+        }, 5000);
 
-        // مراقبة إذا قام المستخدم بالخروج من ملء الشاشة باستخدام زر "رجوع" في الجوال
-        document.addEventListener('fullscreenchange', exitHandler);
-        document.addEventListener('webkitfullscreenchange', exitHandler);
-        
-        function exitHandler() {
-            if (!document.fullscreenElement && !document.webkitIsFullScreen) {
-                const section = document.getElementById('presentation-section');
-                const icon = document.querySelector('#btn-fullscreen i');
-                const text = document.querySelector('#btn-fullscreen span');
-                
-                section.classList.remove('video-fullscreen-mode');
-                if(icon) {
-                    icon.classList.remove('fa-compress');
-                    icon.classList.add('fa-expand');
-                }
-                if(text) text.innerText = "ملء الشاشة";
-                isVideoFullscreen = false;
-            }
-        } 
     </script>
 </body>
 </html>
