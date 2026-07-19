@@ -451,7 +451,22 @@
                 }).catch(e => console.log(e));
             }
         }, 5000);
+// تسجيل وقت الدخول عند فتح القاعة
+const joinTime = new Date().toISOString();
 
+// إرسال بيانات الحضور عند إغلاق أو تحديث الصفحة
+window.addEventListener('beforeunload', function () {
+    const leaveTime = new Date().toISOString();
+    if (typeof callAPI === 'function') {
+        callAPI('recordAttendance', {
+            orderId: currentUser.id,
+            studentName: currentUser.name,
+            course: "غرفة البث المباشر",
+            joinTime: joinTime,
+            leaveTime: leaveTime
+        });
+    }
+});
     </script>
 </body>
 </html>
