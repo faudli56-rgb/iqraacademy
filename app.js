@@ -7,7 +7,6 @@
 // ==========================================
 // المتغيرات العالمية
 // ==========================================
-var currentLiveSession = null; // لتتبع وقت دخول الطالب
 var globalCourses = [];
 var globalAds = [];
 var currentAdIndex = 0;
@@ -115,14 +114,6 @@ function popupActionRegister() {
 }
 
 function navigateTo(pageId) {
-    // --- 1. التحقق من الشاشات المتراكبة التي تمنع التنقل المباشر ---
-    // 💡 التقاط محاولة الخروج من القاعة الافتراضية عبر القائمة
-    var livePage = document.getElementById('page-live-room');
-    if (livePage && livePage.classList.contains('active') && pageId !== 'live-room') {
-        recordStudentAttendance(); // إرسال الحضور
-        var jitsiCont = document.getElementById('jitsi-container');
-        if(jitsiCont) jitsiCont.innerHTML = ''; // إيقاف الفيديو
-    }
     // أ. التحقق من صفحة تفاصيل الدورة (صفحة الهبوط)
     var landingContainer = document.getElementById('landing-page-container');
     if (landingContainer && !landingContainer.classList.contains('hidden')) {
@@ -1973,17 +1964,6 @@ async function updateLiveAdminStats() {
         console.error('خطأ في تحديث الإحصائيات:', e);
     }
 }
-
-// ==========================================
-// تشغيل التهيئة عند تحميل الصفحة
-// ==========================================
-
-window.addEventListener('DOMContentLoaded', function() {
-    if (typeof initializeWebsiteLayout === 'function') {
-        setTimeout(initializeWebsiteLayout, 300);
-    }
-});
-
 // ==========================================
 // دوال الأمان - حماية التخزين المحلي
 // ==========================================
@@ -2314,25 +2294,3 @@ async function loadVisitorLogs() {
 }
 // متغير لحفظ بيانات جلسة الطالب الحالية
 var currentLiveSession = null;
-
-// دالة تسجيل الحضور وحساب وقت التواجد
-function recordStudentAttendance() {
-    if (currentLiveSession) {
-        var leaveTime = new Date().toISOString();
-        var sessionData = currentLiveSession;
-        currentLiveSession = null; // تفريغ الجلسة لمنع التكرار
-
-        // إرسال البيانات فوراً إلى جوجل شيت
-        callAPI('recordAttendance', {
-            orderId: sessionData.orderId,
-            studentName: sessionData.studentName,
-            course: sessionData.course,
-            joinTime: sessionData.joinTime,
-            leaveTime: leaveTime
-        }).then(res => {
-            if (res && res.success && typeof showToast === 'function') {
-                showToast('✅ تم تسجيل حضورك وحفظ وقت الانصراف بنجاح.');
-            }
-        }).catch(e => console.log('خطأ في تسجيل الحضور:', e));
-    }
-}
