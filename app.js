@@ -261,6 +261,11 @@ function getValidImageUrl(url) {
 async function loadCoursesFromServer() {
     try {
         const courses = await fetchCoursesFromSheet();
+        // حماية الكود: التوقف إذا لم تكن البيانات الراجعة مصفوفة فعلية
+        if (!Array.isArray(courses)) {
+            console.error("فشل جلب الدورات: السيرفر لم يرجع بيانات صالحة.", courses);
+            return; 
+        }
         globalCourses = courses;
         renderCourses(courses);
         updateRegistrationDropdown(courses);
@@ -268,7 +273,6 @@ async function loadCoursesFromServer() {
         console.error('خطأ في جلب الدورات:', e);
     }
 }
-
 function renderCourses(courses) {
     var fullContainer = document.getElementById('courses-list-container');
     var homeFeaturedContainer = document.getElementById('home-featured-courses');
