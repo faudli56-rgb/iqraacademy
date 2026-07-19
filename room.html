@@ -45,7 +45,29 @@
     </style>
 </head>
 <body class="bg-gray-50 h-[100dvh] flex flex-col overflow-hidden">
-
+<!-- نافذة تسجيل الدخول الإجبارية للطلاب -->
+<div id="auth-modal" class="fixed inset-0 bg-[#0B1F4D]/95 backdrop-blur-md z-[9999] flex flex-col items-center justify-center px-4 hidden">
+    <div class="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl text-center border-t-4 border-[#D4A017]">
+        <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-[#0B1F4D] text-3xl">
+            <i class="fas fa-user-graduate"></i>
+        </div>
+        <h2 class="text-2xl font-black text-[#0B1F4D] mb-2">تسجيل الدخول للقاعة</h2>
+        <p class="text-xs text-slate-500 mb-6">يرجى إدخال بياناتك ليتم تسجيل حضورك رسمياً في الكشف</p>
+        <div class="space-y-4 text-right">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">الاسم الرباعي الحقيقي *</label>
+                <input type="text" id="auth-name" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#D4A017] outline-none text-sm bg-slate-50" placeholder="مثال: أحمد محمد علي">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">رقم الطلب (Order ID) *</label>
+                <input type="text" id="auth-order" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#D4A017] outline-none text-sm bg-slate-50 text-left dir-ltr" placeholder="مثال: IQR 1001">
+            </div>
+            <button onclick="submitAuth()" class="w-full bg-[#0B1F4D] text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-[#132F6B] transition mt-2">
+                دخول القاعة الآن
+            </button>
+        </div>
+    </div>
+</div>
     <!-- شريط التنقل العلوي -->
     <header class="bg-[#0B1F4D] text-white shadow-md p-3 lg:p-4 flex justify-between items-center z-10 border-b-4 border-[#D4A017] shrink-0">
         <div class="flex items-center gap-2 lg:gap-3">
@@ -119,7 +141,7 @@
                         <div class="w-full overflow-hidden bg-black/50 backdrop-blur-md border-r-2 border-[#D4A017] rounded-l-md pr-2 py-1 flex items-center shadow-inner mt-1">
                             <i class="fas fa-bullhorn text-[#D4A017] text-[10px] lg:text-xs ml-2"></i>
                             <marquee behavior="scroll" direction="right" scrollamount="4" class="text-slate-200 text-[10px] lg:text-xs font-bold pt-0.5 w-full">
-                                أهلاً بكم في قاعة البث المباشر لأكاديمية اقرأ | نرجو الالتزام بآداب النقاش والمشاركة الفعالة | مهارة اليوم... مشروع الغد!
+                                أهلاً بكم في قاعة أكاديمية اقرأ للاستشارات والتدريب| نرجو الالتزام بآداب النقاش والمشاركة الفعالة | مهارة اليوم... مشروع الغد!
                             </marquee>
                         </div>
                     </div>
@@ -186,278 +208,360 @@
     </main>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        if(urlParams.get('invite') === 'trainer') {
-            sessionStorage.setItem('role', 'trainer');
-            sessionStorage.setItem('name', 'المدرب');
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
+      // 1. فحص رابط دعوة المدرب
+// 1. فحص رابط دعوة المدرب
+const urlParams = new URLSearchParams(window.location.search);
+if(urlParams.get('invite') === 'trainer') {
+    sessionStorage.setItem('role', 'trainer');
+    sessionStorage.setItem('name', 'المدرب');
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
 
-        let currentUser = {
-            id: sessionStorage.getItem('code') || localStorage.getItem('userCode') || 'S-' + Math.floor(Math.random() * 10000),
-            name: sessionStorage.getItem('name') || localStorage.getItem('userName') || sessionStorage.getItem('username') || 'متدرب ضيف',
-            role: sessionStorage.getItem('role') || localStorage.getItem('userRole') || 'student'
-        };
+// 2. إعداد المتغيرات الأساسية وبيانات المستخدم
+let currentUser = {
+    id: sessionStorage.getItem('code') || localStorage.getItem('userCode') || '',
+    name: sessionStorage.getItem('name') || localStorage.getItem('userName') || sessionStorage.getItem('username') || '',
+    role: sessionStorage.getItem('role') || localStorage.getItem('userRole') || 'student'
+};
 
-        let messageBatch = []; 
-        let jitsiApi = null;
-        let lastSyncedMsgId = 0; 
-        let currentRoomState = { live_yt_id: "", workshops_active: "false" };
+let messageBatch = []; 
+let jitsiApi = null;
+let lastSyncedMsgId = 0; 
+let currentRoomState = { live_yt_id: "", workshops_active: "false" };
 
-        if (currentUser.role === 'admin' || currentUser.role === 'assistant' || currentUser.role === 'marketer' || currentUser.role === 'trainer') {
-            document.getElementById('btn-show-assistant').classList.remove('hidden');
-            if(document.getElementById('msg-input')) document.getElementById('msg-input').placeholder = "رسالة إدارية للمجموعة...";
-        }
+// 3. إظهار زر التحكم للإدارة والمدربين
+if (currentUser.role === 'admin' || currentUser.role === 'assistant' || currentUser.role === 'marketer' || currentUser.role === 'trainer') {
+    document.getElementById('btn-show-assistant').classList.remove('hidden');
+    if(document.getElementById('msg-input')) document.getElementById('msg-input').placeholder = "رسالة إدارية للمجموعة...";
+}
 
-        function switchInteractionTab(tab) {
-            const chatDiv = document.getElementById('interaction-chat');
-            const attendDiv = document.getElementById('interaction-attendees');
-            const chatBtn = document.getElementById('tab-chat-btn');
-            const attendBtn = document.getElementById('tab-attend-btn');
+// 4. نافذة تسجيل الدخول الإجبارية للطلاب (وحل التأخير)
+if (!currentUser.name || currentUser.name === 'متدرب ضيف') {
+    document.getElementById('auth-modal').classList.remove('hidden');
+} else {
+    startRoomSync(); // تشغيل المزامنة فوراً دون انتظار
+}
 
-            if (tab === 'chat') {
-                chatDiv.classList.remove('hidden'); attendDiv.classList.add('hidden');
-                chatBtn.classList.add('border-[#0B1F4D]'); attendBtn.classList.remove('border-[#0B1F4D]');
-            } else {
-                chatDiv.classList.add('hidden'); attendDiv.classList.remove('hidden');
-                attendBtn.classList.add('border-[#0B1F4D]'); chatBtn.classList.remove('border-[#0B1F4D]');
-            }
-        }
+const joinTime = new Date().toISOString(); // تسجيل وقت الدخول
 
-        function sendMessage() {
-            const input = document.getElementById('msg-input');
-            const text = input.value.trim();
-            if (!text) return;
+function submitAuth() {
+    const nameVal = document.getElementById('auth-name').value.trim();
+    const orderVal = document.getElementById('auth-order').value.trim();
+    if(!nameVal || !orderVal) {
+        alert("يرجى إدخال الاسم ورقم الطلب"); return;
+    }
+    currentUser.name = nameVal;
+    currentUser.id = orderVal;
+    sessionStorage.setItem('name', nameVal);
+    sessionStorage.setItem('code', orderVal);
+    
+    document.getElementById('auth-modal').classList.add('hidden');
+    startRoomSync(); // تشغيل البث فوراً
+}
 
-            const msgObj = {
-                id: Date.now(), sender: currentUser.name, text: text, type: 'chat',
-                timestamp: new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})
-            };
+// 5. المزامنة السريعة
+function startRoomSync() {
+    doSyncWork(); 
+    setInterval(doSyncWork, 8000); 
+}
 
-            displayMessage(msgObj);
-            input.value = '';
-            messageBatch.push(msgObj);
-        }
-
-        function displayMessage(msg) {
-            const area = document.getElementById('messages-area');
-            const div = document.createElement('div');
-            div.className = "bg-white p-2 lg:p-3 rounded-lg shadow-sm border border-slate-100";
-            
-            const header = document.createElement('div');
-            header.className = "flex justify-between items-center mb-1";
-            
-            const senderSpan = document.createElement('span');
-            senderSpan.className = "font-bold text-[11px] lg:text-xs text-[#0B1F4D]";
-            if (msg.sender.includes('إدارة') || msg.sender === 'المدرب' || msg.sender === 'المساعد الآلي') {
-                senderSpan.innerHTML = `<i class="fas fa-shield-alt text-[#D4A017] ml-1"></i> ${msg.sender}`;
-            } else {
-                senderSpan.textContent = msg.sender;
-            }
-            
-            const timeSpan = document.createElement('span');
-            timeSpan.className = "text-[9px] lg:text-[10px] text-gray-400 font-mono";
-            timeSpan.textContent = msg.timestamp;
-
-            header.appendChild(senderSpan);
-            header.appendChild(timeSpan);
-            
-            const bodyP = document.createElement('p');
-            bodyP.className = "text-[11px] lg:text-sm text-slate-700 leading-relaxed";
-            bodyP.textContent = msg.text; 
-
-            div.appendChild(header); div.appendChild(bodyP);
-            area.appendChild(div); area.scrollTop = area.scrollHeight;
-        }
-
-        function triggerReaction(emoji) {
-            const zone = document.getElementById('reaction-fly-zone');
-            if (!zone) return;
-            const el = document.createElement('div');
-            el.className = 'reaction-emoji'; el.innerText = emoji;
-            el.style.left = Math.random() * 70 + '%'; 
-            zone.appendChild(el);
-            setTimeout(() => el.remove(), 3000); 
-        }
-
-        let isVideoFullscreen = false;
-        function toggleVideoFullscreen() {
-            const section = document.getElementById('presentation-section');
-            const icon = document.querySelector('#btn-fullscreen i');
-            const text = document.querySelector('#btn-fullscreen span');
-            
-            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-                if (section.requestFullscreen) section.requestFullscreen();
-                else if (section.webkitRequestFullscreen) section.webkitRequestFullscreen();
-                else if (section.msRequestFullscreen) section.msRequestFullscreen();
+function doSyncWork() {
+    if (messageBatch.length > 0 && typeof callAPI === 'function') {
+        const payload = [...messageBatch];
+        messageBatch = []; 
+        callAPI('saveChatBatch', { messages: payload }).catch(() => messageBatch.push(...payload));
+    }
+    if (typeof callAPI === 'function') {
+        callAPI('syncRoomState', { lastMsgId: lastSyncedMsgId }).then(res => {
+            if (res && res.success) {
+                // أ. مزامنة الرسائل
+                if (res.messages) res.messages.forEach(msg => { if (msg.sender !== currentUser.name) displayMessage(msg); lastSyncedMsgId = Math.max(lastSyncedMsgId, msg.id); });
                 
-                section.classList.add('video-fullscreen-mode');
-                icon.classList.replace('fa-expand', 'fa-compress');
-                if(text) text.innerText = "تصغير";
-                isVideoFullscreen = true;
-            } else {
-                if (document.exitFullscreen) document.exitFullscreen();
-                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-                else if (document.msExitFullscreen) document.msExitFullscreen();
-                
-                section.classList.remove('video-fullscreen-mode');
-                icon.classList.replace('fa-compress', 'fa-expand');
-                if(text) text.innerText = "ملء الشاشة";
-                isVideoFullscreen = false;
-            }
-        }
-
-        document.addEventListener('fullscreenchange', exitHandler);
-        document.addEventListener('webkitfullscreenchange', exitHandler);
-        function exitHandler() {
-            if (!document.fullscreenElement && !document.webkitIsFullScreen) {
-                const section = document.getElementById('presentation-section');
-                const icon = document.querySelector('#btn-fullscreen i');
-                const text = document.querySelector('#btn-fullscreen span');
-                section.classList.remove('video-fullscreen-mode');
-                if(icon) icon.classList.replace('fa-compress', 'fa-expand');
-                if(text) text.innerText = "ملء الشاشة";
-                isVideoFullscreen = false;
-            }
-        }
-
-        function toggleAssistantPanel() {
-            const panel = document.getElementById('assistant-panel');
-            panel.classList.toggle('translate-y-full');
-            panel.classList.toggle('hidden');
-        }
-
-        function toggleWhiteboard() {
-            const wb = document.getElementById('whiteboard-container');
-            wb.classList.toggle('hidden');
-        }
-
-        function refreshStream() {
-            const iframe = document.getElementById('yt-iframe');
-            iframe.src = iframe.src; 
-        }
-
-        function generateTrainerLink() {
-            const baseUrl = window.location.href.split('?')[0];
-            const trainerLink = baseUrl + "?invite=trainer";
-            navigator.clipboard.writeText(trainerLink).then(() => {
-                alert("تم النسخ بنجاح! 🔗\n\nالرابط الحقيقي هو:\n" + trainerLink);
-            }).catch(() => {
-                prompt("يرجى نسخ الرابط يدوياً من هنا:", trainerLink);
-            });
-        }
-
-        function triggerWorkshopsStatusForEveryone(start) {
-            const msg = start ? 'بدء ورشة التفاعل للجميع؟' : 'إغلاق الورش والعودة للبث الرئيسي؟';
-            if (confirm(msg)) {
-                if(typeof callAPI === 'function') {
-                    callAPI('updateRoomSettings', { key: 'workshops_active', value: start ? 'true' : 'false' }).then(() => {
-                        if(start) startWorkshops(false); else closeWorkshops(false);
-                    });
-                } else {
-                    if(start) startWorkshops(false); else closeWorkshops(false);
-                }
-            }
-        }
-
-        function startWorkshops(isAutoTriggered) {
-            document.getElementById('youtube-container').classList.add('hidden');
-            document.getElementById('whiteboard-container').classList.add('hidden');
-            document.getElementById('jitsi-container').classList.remove('hidden');
-            
-            const roomNumber = 'IqraAcademy_Live_Workshop_Official'; 
-            const isAdmin = (currentUser.role === 'admin' || currentUser.role === 'trainer' || currentUser.role === 'assistant');
-
-            const options = {
-                roomName: roomNumber, width: '100%', height: '100%',
-                parentNode: document.getElementById('jitsi-container'),
-                userInfo: { displayName: currentUser.name },
-                configOverwrite: { 
-                    prejoinPageEnabled: true, // تفعيل شاشة التجهيز للجميع لفك تجميد الكاميرا والمايك
-                    startWithAudioMuted: true,
-                    startWithVideoMuted: true,
-                    disableDeepLinking: true
-                },
-                interfaceConfigOverwrite: {
-                    SHOW_JITSI_WATERMARK: false,
-                    // أضفنا الإعدادات (settings) للطلاب ليتمكنوا من اختيار المايك الخاص بهم
-                    TOOLBAR_BUTTONS: isAdmin ? 
-                        ['microphone', 'camera', 'desktop', 'fullscreen', 'profile', 'chat', 'settings', 'raisehand', 'videoquality', 'participants-pane', 'tileview', 'mute-everyone', 'security'] : 
-                        ['microphone', 'camera', 'raisehand', 'fullscreen', 'chat', 'tileview', 'settings'],
-                    // أضفنا قسم الأجهزة (devices) للطلاب
-                    SETTINGS_SECTIONS: isAdmin ? ['devices', 'language', 'moderator', 'profile', 'sounds'] : ['devices', 'language', 'profile']
-                }
-            };
-            
-            if (jitsiApi) jitsiApi.dispose();
-            jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', options);
-            if(!isAutoTriggered && isAdmin) alert("تم فتح الورشة التفاعلية وتوحيد الغرفة!");
-        }
-
-        function closeWorkshops(isAutoTriggered) {
-            if (jitsiApi) { jitsiApi.dispose(); jitsiApi = null; }
-            document.getElementById('jitsi-container').classList.add('hidden');
-            document.getElementById('whiteboard-container').classList.add('hidden');
-            document.getElementById('youtube-container').classList.remove('hidden');
-            if(isAutoTriggered) refreshStream(); 
-        }
-
-        function updateStreamLink() {
-            const newId = document.getElementById('emergency-link').value.trim();
-            if(newId && typeof callAPI === 'function') {
-                callAPI('updateRoomSettings', { key: 'live_yt_id', value: newId }).then(() => {
-                    alert("تم تحديث مسار بث يوتيوب بنجاح.");
-                    toggleAssistantPanel();
-                });
-            }
-        }
-
-        function endSession() {
-            if(confirm("هل ننهي اللقاء للجميع؟")) {
-                if(typeof callAPI === 'function') {
-                    callAPI('updateRoomSettings', { key: 'live_yt_id', value: '' }); 
-                    callAPI('updateRoomSettings', { key: 'workshops_active', value: 'false' });
-                }
-                document.body.innerHTML = `
-                    <div class="h-screen flex flex-col items-center justify-center bg-[#0B1F4D] text-white text-center px-4">
-                        <i class="fas fa-check-circle text-5xl lg:text-6xl text-emerald-400 mb-6"></i>
-                        <h1 class="text-2xl lg:text-3xl font-black mb-3">شكراً لجهودكم</h1>
-                        <p class="text-blue-200 text-xs lg:text-sm">انتهى اللقاء التدريبي بنجاح.</p>
-                    </div>`;
-            }
-        }
-
-        // مزامنة البيانات بين الأجهزة (تعمل بشكل صحيح إذا كان رابط Vercel والسيرفر متصلين)
-        setInterval(() => {
-            if (messageBatch.length > 0 && typeof callAPI === 'function') {
-                const payload = [...messageBatch];
-                messageBatch = []; 
-                callAPI('saveChatBatch', { messages: payload }).catch(() => messageBatch.push(...payload));
-            }
-            if (typeof callAPI === 'function') {
-                callAPI('syncRoomState', { lastMsgId: lastSyncedMsgId }).then(res => {
-                    if (res && res.success) {
-                        if (res.messages) res.messages.forEach(msg => { if (msg.sender !== currentUser.name) displayMessage(msg); lastSyncedMsgId = Math.max(lastSyncedMsgId, msg.id); });
-                        if (res.state.live_yt_id && currentRoomState.live_yt_id !== res.state.live_yt_id) {
-                            currentRoomState.live_yt_id = res.state.live_yt_id;
-                            let vidId = res.state.live_yt_id;
-                            document.getElementById('yt-iframe').src = `https://www.youtube.com/embed/${vidId}?autoplay=1&modestbranding=1&controls=0&rel=0&playsinline=1`;
-                            document.getElementById('no-video-msg').style.display = 'none'; 
-                        }
-                        // استقبال أمر تشغيل الورشة من الإدارة للأجهزة الأخرى
-                        if (res.state.workshops_active === 'true' && document.getElementById('jitsi-container').classList.contains('hidden')) startWorkshops(true); 
-                        else if (res.state.workshops_active === 'false' && !document.getElementById('jitsi-container').classList.contains('hidden')) closeWorkshops(true);
+                // ب. تحديث قائمة الحضور الحية
+                if (res.attendees) {
+                    const countSpan = document.getElementById('attendee-count');
+                    const listUl = document.getElementById('attendees-list');
+                    if (countSpan && listUl) {
+                        countSpan.innerText = res.attendees.length > 0 ? "+" + res.attendees.length : "0";
+                        listUl.innerHTML = "";
+                        res.attendees.forEach(att => {
+                            listUl.insertAdjacentHTML('beforeend', `
+                                <li class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm transition hover:shadow-md">
+                                    <span class="font-bold text-[#0B1F4D] text-[11px]"><i class="fas fa-user-circle text-emerald-500 ml-1.5 text-sm"></i> ${att.name}</span>
+                                    <span class="text-[9px] text-slate-400 bg-slate-50 px-2 py-1 rounded-full">دخول: ${att.time}</span>
+                                </li>
+                            `);
+                        });
                     }
-                }).catch(e => console.log(e));
-            }
-        }, 15000);
-// تسجيل وقت الدخول عند فتح القاعة
-const joinTime = new Date().toISOString();
+                }
 
-// إرسال بيانات الحضور عند إغلاق أو تحديث الصفحة
+                // ج. تحديث مسار يوتيوب أو إغلاق القاعة (المكان الذي سألت عنه)
+                if (res.state.live_yt_id === 'ENDED') {
+                    showFarewellScreen(); 
+                }
+                else if (res.state.live_yt_id && currentRoomState.live_yt_id !== res.state.live_yt_id) {
+                    currentRoomState.live_yt_id = res.state.live_yt_id;
+                    let vidId = res.state.live_yt_id;
+                    document.getElementById('yt-iframe').src = `https://www.youtube.com/embed/${vidId}?autoplay=1&modestbranding=1&controls=0&rel=0&playsinline=1`;
+                    var noVideoMsg = document.getElementById('no-video-msg');
+                    if(noVideoMsg) noVideoMsg.style.display = 'none'; 
+                }
+                
+                // د. التحكم بورش العمل
+                if (res.state.workshops_active === 'true' && document.getElementById('jitsi-container').classList.contains('hidden')) startWorkshops(true); 
+                else if (res.state.workshops_active === 'false' && !document.getElementById('jitsi-container').classList.contains('hidden')) closeWorkshops(true);
+            }
+        }).catch(e => console.log(e));
+    }
+}
+
+// 6. شاشة التوديع للمشاركين
+function showFarewellScreen() {
+    document.body.innerHTML = `
+        <div class="h-screen flex flex-col items-center justify-center bg-[#0B1F4D] text-white text-center px-4 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1200');"></div>
+            
+            <div class="relative z-10 bg-white/10 p-8 rounded-3xl backdrop-blur-md border border-white/20 shadow-2xl max-w-lg w-full">
+                <div class="w-20 h-20 bg-[#D4A017] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg animate-bounce">
+                    <i class="fas fa-heart text-4xl text-[#0B1F4D]"></i>
+                </div>
+                <h1 class="text-2xl lg:text-3xl font-black mb-4 leading-relaxed text-white drop-shadow-md">
+                    انتهى اللقاء التدريبي.. شكراً لوجودكم الرائع! 🌟
+                </h1>
+                <p class="text-blue-100 text-sm lg:text-base leading-relaxed mb-8 font-medium">
+                    سعدنا جداً بمشاركتكم وتفاعلكم المتميز في هذه الجلسة. نتمنى لكم التوفيق والنجاح الدائم، ونراكم في اللقاءات القادمة بإذن الله.
+                </p>
+                <button onclick="window.location.href='indx.html'" class="inline-flex items-center justify-center gap-2 bg-[#D4A017] hover:bg-yellow-500 text-[#0B1F4D] font-black px-8 py-4 rounded-xl transition shadow-[0_0_15px_rgba(212,160,23,0.5)] w-full text-center text-sm lg:text-base cursor-pointer hover:scale-105">
+                    <i class="fas fa-home text-lg"></i> العودة إلى الصفحة الرئيسية
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// 7. دوال التفاعل والدردشة
+function switchInteractionTab(tab) {
+    const chatDiv = document.getElementById('interaction-chat');
+    const attendDiv = document.getElementById('interaction-attendees');
+    const chatBtn = document.getElementById('tab-chat-btn');
+    const attendBtn = document.getElementById('tab-attend-btn');
+
+    if (tab === 'chat') {
+        if(chatDiv) chatDiv.classList.remove('hidden'); 
+        if(attendDiv) attendDiv.classList.add('hidden');
+        if(chatBtn) chatBtn.classList.add('border-[#0B1F4D]'); 
+        if(attendBtn) attendBtn.classList.remove('border-[#0B1F4D]');
+    } else {
+        if(chatDiv) chatDiv.classList.add('hidden'); 
+        if(attendDiv) attendDiv.classList.remove('hidden');
+        if(attendBtn) attendBtn.classList.add('border-[#0B1F4D]'); 
+        if(chatBtn) chatBtn.classList.remove('border-[#0B1F4D]');
+    }
+}
+
+function sendMessage() {
+    const input = document.getElementById('msg-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const msgObj = {
+        id: Date.now(), sender: currentUser.name, text: text, type: 'chat',
+        timestamp: new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})
+    };
+
+    displayMessage(msgObj);
+    input.value = '';
+    messageBatch.push(msgObj);
+}
+
+function displayMessage(msg) {
+    const area = document.getElementById('messages-area');
+    if(!area) return;
+    const div = document.createElement('div');
+    div.className = "bg-white p-2 lg:p-3 rounded-lg shadow-sm border border-slate-100";
+    
+    const header = document.createElement('div');
+    header.className = "flex justify-between items-center mb-1";
+    
+    const senderSpan = document.createElement('span');
+    senderSpan.className = "font-bold text-[11px] lg:text-xs text-[#0B1F4D]";
+    if (msg.sender.includes('إدارة') || msg.sender === 'المدرب' || msg.sender === 'المساعد الآلي') {
+        senderSpan.innerHTML = `<i class="fas fa-shield-alt text-[#D4A017] ml-1"></i> ${msg.sender}`;
+    } else {
+        senderSpan.textContent = msg.sender;
+    }
+    
+    const timeSpan = document.createElement('span');
+    timeSpan.className = "text-[9px] lg:text-[10px] text-gray-400 font-mono";
+    timeSpan.textContent = msg.timestamp;
+
+    header.appendChild(senderSpan);
+    header.appendChild(timeSpan);
+    
+    const bodyP = document.createElement('p');
+    bodyP.className = "text-[11px] lg:text-sm text-slate-700 leading-relaxed";
+    bodyP.textContent = msg.text; 
+
+    div.appendChild(header); div.appendChild(bodyP);
+    area.appendChild(div); area.scrollTop = area.scrollHeight;
+}
+
+function triggerReaction(emoji) {
+    const zone = document.getElementById('reaction-fly-zone');
+    if (!zone) return;
+    const el = document.createElement('div');
+    el.className = 'reaction-emoji'; el.innerText = emoji;
+    el.style.left = Math.random() * 70 + '%'; 
+    zone.appendChild(el);
+    setTimeout(() => el.remove(), 3000); 
+}
+
+// 8. دوال العرض والتحكم بالشاشة
+let isVideoFullscreen = false;
+function toggleVideoFullscreen() {
+    const section = document.getElementById('presentation-section');
+    const icon = document.querySelector('#btn-fullscreen i');
+    const text = document.querySelector('#btn-fullscreen span');
+    
+    if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+        if (section.requestFullscreen) section.requestFullscreen();
+        else if (section.webkitRequestFullscreen) section.webkitRequestFullscreen();
+        else if (section.msRequestFullscreen) section.msRequestFullscreen();
+        
+        section.classList.add('video-fullscreen-mode');
+        icon.classList.replace('fa-expand', 'fa-compress');
+        if(text) text.innerText = "تصغير";
+        isVideoFullscreen = true;
+    } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        else if (document.msExitFullscreen) document.msExitFullscreen();
+        
+        section.classList.remove('video-fullscreen-mode');
+        icon.classList.replace('fa-compress', 'fa-expand');
+        if(text) text.innerText = "ملء الشاشة";
+        isVideoFullscreen = false;
+    }
+}
+
+document.addEventListener('fullscreenchange', exitHandler);
+document.addEventListener('webkitfullscreenchange', exitHandler);
+function exitHandler() {
+    if (!document.fullscreenElement && !document.webkitIsFullScreen) {
+        const section = document.getElementById('presentation-section');
+        const icon = document.querySelector('#btn-fullscreen i');
+        const text = document.querySelector('#btn-fullscreen span');
+        section.classList.remove('video-fullscreen-mode');
+        if(icon) icon.classList.replace('fa-compress', 'fa-expand');
+        if(text) text.innerText = "ملء الشاشة";
+        isVideoFullscreen = false;
+    }
+}
+
+function toggleAssistantPanel() {
+    const panel = document.getElementById('assistant-panel');
+    panel.classList.toggle('translate-y-full');
+    panel.classList.toggle('hidden');
+}
+
+function toggleWhiteboard() {
+    const wb = document.getElementById('whiteboard-container');
+    wb.classList.toggle('hidden');
+}
+
+function refreshStream() {
+    const iframe = document.getElementById('yt-iframe');
+    iframe.src = iframe.src; 
+}
+
+// 9. دوال الإدارة والمدربين
+function generateTrainerLink() {
+    const baseUrl = window.location.href.split('?')[0];
+    const trainerLink = baseUrl + "?invite=trainer";
+    navigator.clipboard.writeText(trainerLink).then(() => {
+        alert("تم النسخ بنجاح! 🔗\n\nالرابط الحقيقي هو:\n" + trainerLink);
+    }).catch(() => {
+        prompt("يرجى نسخ الرابط يدوياً من هنا:", trainerLink);
+    });
+}
+
+function triggerWorkshopsStatusForEveryone(start) {
+    const msg = start ? 'بدء ورشة التفاعل للجميع؟' : 'إغلاق الورش والعودة للبث الرئيسي؟';
+    if (confirm(msg)) {
+        if(typeof callAPI === 'function') {
+            callAPI('updateRoomSettings', { key: 'workshops_active', value: start ? 'true' : 'false' }).then(() => {
+                if(start) startWorkshops(false); else closeWorkshops(false);
+            });
+        } else {
+            if(start) startWorkshops(false); else closeWorkshops(false);
+        }
+    }
+}
+
+function startWorkshops(isAutoTriggered) {
+    document.getElementById('youtube-container').classList.add('hidden');
+    document.getElementById('whiteboard-container').classList.add('hidden');
+    document.getElementById('jitsi-container').classList.remove('hidden');
+    
+    const roomNumber = 'IqraAcademy_Live_Workshop_Official'; 
+    const isAdmin = (currentUser.role === 'admin' || currentUser.role === 'trainer' || currentUser.role === 'assistant');
+
+    const options = {
+        roomName: roomNumber, width: '100%', height: '100%',
+        parentNode: document.getElementById('jitsi-container'),
+        userInfo: { displayName: currentUser.name },
+        configOverwrite: { 
+            prejoinPageEnabled: true, 
+            startWithAudioMuted: true,
+            startWithVideoMuted: true,
+            disableDeepLinking: true
+        },
+        interfaceConfigOverwrite: {
+            SHOW_JITSI_WATERMARK: false,
+            TOOLBAR_BUTTONS: isAdmin ? 
+                ['microphone', 'camera', 'desktop', 'fullscreen', 'profile', 'chat', 'settings', 'raisehand', 'videoquality', 'participants-pane', 'tileview', 'mute-everyone', 'security'] : 
+                ['microphone', 'camera', 'raisehand', 'fullscreen', 'chat', 'tileview', 'settings'],
+            SETTINGS_SECTIONS: isAdmin ? ['devices', 'language', 'moderator', 'profile', 'sounds'] : ['devices', 'language', 'profile']
+        }
+    };
+    
+    if (jitsiApi) jitsiApi.dispose();
+    jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', options);
+    if(!isAutoTriggered && isAdmin) alert("تم فتح الورشة التفاعلية وتوحيد الغرفة!");
+}
+
+function closeWorkshops(isAutoTriggered) {
+    if (jitsiApi) { jitsiApi.dispose(); jitsiApi = null; }
+    document.getElementById('jitsi-container').classList.add('hidden');
+    document.getElementById('whiteboard-container').classList.add('hidden');
+    document.getElementById('youtube-container').classList.remove('hidden');
+    if(isAutoTriggered) refreshStream(); 
+}
+
+function updateStreamLink() {
+    const newId = document.getElementById('emergency-link').value.trim();
+    if(newId && typeof callAPI === 'function') {
+        callAPI('updateRoomSettings', { key: 'live_yt_id', value: newId }).then(() => {
+            alert("تم تحديث مسار بث يوتيوب بنجاح.");
+            toggleAssistantPanel();
+        });
+    }
+}
+
+function endSession() {
+    if(confirm("هل متأكد من إنهاء اللقاء التدريبي وإغلاق القاعة للجميع؟")) {
+        if(typeof callAPI === 'function') {
+            callAPI('updateRoomSettings', { key: 'live_yt_id', value: 'ENDED' }); 
+            callAPI('updateRoomSettings', { key: 'workshops_active', value: 'false' });
+        }
+        showFarewellScreen(); // الإغلاق عند الإدارة فوراً
+    }
+}
+
+// 10. إرسال الحضور والانصراف لجوجل شيت عند الإغلاق
 window.addEventListener('beforeunload', function () {
     const leaveTime = new Date().toISOString();
-    if (typeof callAPI === 'function') {
+    if (typeof callAPI === 'function' && currentUser.role === 'student') {
         callAPI('recordAttendance', {
             orderId: currentUser.id,
             studentName: currentUser.name,
