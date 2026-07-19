@@ -20,6 +20,7 @@ async function callAPI(action, data = {}) {
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
             redirect: 'follow', 
+            keepalive: true,
             headers: {
                 'Content-Type': 'text/plain;charset=utf-8',
             },
