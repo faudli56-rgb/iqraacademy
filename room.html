@@ -229,13 +229,42 @@ let jitsiApi = null;
 let lastSyncedMsgId = 0; 
 let currentRoomState = { live_yt_id: "", workshops_active: "false" };
 
-// 3. إظهار زر التحكم للإدارة والمدربين
-if (currentUser.role === 'admin' || currentUser.role === 'assistant' || currentUser.role === 'marketer' || currentUser.role === 'trainer') {
-    document.getElementById('btn-show-assistant').classList.remove('hidden');
-    if(document.getElementById('msg-input')) document.getElementById('msg-input').placeholder = "رسالة إدارية للمجموعة...";
+// 3. بناء نافذة الدخول برمجياً (لتجنب أخطاء نسيان إضافة الـ HTML)
+if (!document.getElementById('auth-modal')) {
+    document.body.insertAdjacentHTML('beforeend', `
+    <div id="auth-modal" class="fixed inset-0 bg-[#0B1F4D]/95 backdrop-blur-md z-[9999] flex flex-col items-center justify-center px-4 hidden">
+        <div class="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl text-center border-t-4 border-[#D4A017]">
+            <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-[#0B1F4D] text-3xl">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <h2 class="text-2xl font-black text-[#0B1F4D] mb-2">تسجيل الدخول للقاعة</h2>
+            <p class="text-xs text-slate-500 mb-6">يرجى إدخال بياناتك ليتم تسجيل حضورك رسمياً في الكشف</p>
+            <div class="space-y-4 text-right">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">الاسم الرباعي الحقيقي *</label>
+                    <input type="text" id="auth-name" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#D4A017] outline-none text-sm bg-slate-50" placeholder="مثال: أحمد محمد علي">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">رقم الطلب (Order ID) *</label>
+                    <input type="text" id="auth-order" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#D4A017] outline-none text-sm bg-slate-50 text-left dir-ltr" placeholder="مثال: IQR 1001">
+                </div>
+                <button onclick="submitAuth()" class="w-full bg-[#0B1F4D] text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-[#132F6B] transition mt-2">
+                    دخول القاعة الآن
+                </button>
+            </div>
+        </div>
+    </div>`);
 }
 
-// 4. نافذة تسجيل الدخول الإجبارية للطلاب (وحل التأخير)
+// 4. إظهار زر التحكم للإدارة والمدربين
+if (currentUser.role === 'admin' || currentUser.role === 'assistant' || currentUser.role === 'marketer' || currentUser.role === 'trainer') {
+    const adminBtn = document.getElementById('btn-show-assistant');
+    if (adminBtn) adminBtn.classList.remove('hidden');
+    const msgInput = document.getElementById('msg-input');
+    if (msgInput) msgInput.placeholder = "رسالة إدارية للمجموعة...";
+}
+
+// 5. نافذة تسجيل الدخول الإجبارية للطلاب (وحل التأخير)
 if (!currentUser.name || currentUser.name === 'متدرب ضيف') {
     document.getElementById('auth-modal').classList.remove('hidden');
 } else {
@@ -259,7 +288,7 @@ function submitAuth() {
     startRoomSync(); // تشغيل البث فوراً
 }
 
-// 5. المزامنة السريعة
+// 6. المزامنة السريعة وحماية الكود من الأخطاء
 function startRoomSync() {
     doSyncWork(); 
     setInterval(doSyncWork, 8000); 
@@ -273,7 +302,7 @@ function doSyncWork() {
     }
     if (typeof callAPI === 'function') {
         callAPI('syncRoomState', { lastMsgId: lastSyncedMsgId }).then(res => {
-            if (res && res.success) {
+            if (res && res.success && res.state) { // إضافة حماية للبيانات القادمة
                 // أ. مزامنة الرسائل
                 if (res.messages) res.messages.forEach(msg => { if (msg.sender !== currentUser.name) displayMessage(msg); lastSyncedMsgId = Math.max(lastSyncedMsgId, msg.id); });
                 
@@ -295,30 +324,37 @@ function doSyncWork() {
                     }
                 }
 
-                // ج. تحديث مسار يوتيوب أو إغلاق القاعة (المكان الذي سألت عنه)
+                // ج. تحديث مسار يوتيوب أو إغلاق القاعة
                 if (res.state.live_yt_id === 'ENDED') {
-                    showFarewellScreen(); 
+                    // التأكد من عدم تكرار رسم الشاشة لتجنب التعليق
+                    if(!document.getElementById('farewell-screen-active')) {
+                        showFarewellScreen(); 
+                    }
                 }
                 else if (res.state.live_yt_id && currentRoomState.live_yt_id !== res.state.live_yt_id) {
                     currentRoomState.live_yt_id = res.state.live_yt_id;
                     let vidId = res.state.live_yt_id;
-                    document.getElementById('yt-iframe').src = `https://www.youtube.com/embed/${vidId}?autoplay=1&modestbranding=1&controls=0&rel=0&playsinline=1`;
+                    let ytFrame = document.getElementById('yt-iframe');
+                    if (ytFrame) ytFrame.src = `https://www.youtube.com/embed/${vidId}?autoplay=1&modestbranding=1&controls=0&rel=0&playsinline=1`;
                     var noVideoMsg = document.getElementById('no-video-msg');
                     if(noVideoMsg) noVideoMsg.style.display = 'none'; 
                 }
                 
-                // د. التحكم بورش العمل
-                if (res.state.workshops_active === 'true' && document.getElementById('jitsi-container').classList.contains('hidden')) startWorkshops(true); 
-                else if (res.state.workshops_active === 'false' && !document.getElementById('jitsi-container').classList.contains('hidden')) closeWorkshops(true);
+                // د. التحكم بورش العمل وحماية العناصر إذا تم مسحها
+                let jitsiContainer = document.getElementById('jitsi-container');
+                if (jitsiContainer) {
+                    if (res.state.workshops_active === 'true' && jitsiContainer.classList.contains('hidden')) startWorkshops(true); 
+                    else if (res.state.workshops_active === 'false' && !jitsiContainer.classList.contains('hidden')) closeWorkshops(true);
+                }
             }
         }).catch(e => console.log(e));
     }
 }
 
-// 6. شاشة التوديع للمشاركين
+// 7. شاشة التوديع للمشاركين
 function showFarewellScreen() {
     document.body.innerHTML = `
-        <div class="h-screen flex flex-col items-center justify-center bg-[#0B1F4D] text-white text-center px-4 relative overflow-hidden">
+        <div id="farewell-screen-active" class="h-screen flex flex-col items-center justify-center bg-[#0B1F4D] text-white text-center px-4 relative overflow-hidden">
             <div class="absolute inset-0 opacity-10 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1200');"></div>
             
             <div class="relative z-10 bg-white/10 p-8 rounded-3xl backdrop-blur-md border border-white/20 shadow-2xl max-w-lg w-full">
@@ -331,15 +367,15 @@ function showFarewellScreen() {
                 <p class="text-blue-100 text-sm lg:text-base leading-relaxed mb-8 font-medium">
                     سعدنا جداً بمشاركتكم وتفاعلكم المتميز في هذه الجلسة. نتمنى لكم التوفيق والنجاح الدائم، ونراكم في اللقاءات القادمة بإذن الله.
                 </p>
-                <button onclick="window.location.href='indx.html'" class="inline-flex items-center justify-center gap-2 bg-[#D4A017] hover:bg-yellow-500 text-[#0B1F4D] font-black px-8 py-4 rounded-xl transition shadow-[0_0_15px_rgba(212,160,23,0.5)] w-full text-center text-sm lg:text-base cursor-pointer hover:scale-105">
-                    <i class="fas fa-home text-lg"></i> العودة إلى الصفحة الرئيسية
-                </button>
+                <button onclick="window.location.href='/'" class="inline-flex items-center justify-center gap-2 bg-[#D4A017] hover:bg-yellow-500 text-[#0B1F4D] font-black px-8 py-4 rounded-xl transition shadow-[0_0_15px_rgba(212,160,23,0.5)] w-full text-center text-sm lg:text-base cursor-pointer hover:scale-105">
+    <i class="fas fa-home text-lg"></i> العودة إلى الصفحة الرئيسية
+</button>
             </div>
         </div>
     `;
 }
 
-// 7. دوال التفاعل والدردشة
+// 8. دوال التفاعل والدردشة
 function switchInteractionTab(tab) {
     const chatDiv = document.getElementById('interaction-chat');
     const attendDiv = document.getElementById('interaction-attendees');
@@ -361,6 +397,7 @@ function switchInteractionTab(tab) {
 
 function sendMessage() {
     const input = document.getElementById('msg-input');
+    if (!input) return;
     const text = input.value.trim();
     if (!text) return;
 
@@ -416,12 +453,13 @@ function triggerReaction(emoji) {
     setTimeout(() => el.remove(), 3000); 
 }
 
-// 8. دوال العرض والتحكم بالشاشة
+// 9. دوال العرض والتحكم بالشاشة
 let isVideoFullscreen = false;
 function toggleVideoFullscreen() {
     const section = document.getElementById('presentation-section');
     const icon = document.querySelector('#btn-fullscreen i');
     const text = document.querySelector('#btn-fullscreen span');
+    if(!section) return;
     
     if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
         if (section.requestFullscreen) section.requestFullscreen();
@@ -429,7 +467,7 @@ function toggleVideoFullscreen() {
         else if (section.msRequestFullscreen) section.msRequestFullscreen();
         
         section.classList.add('video-fullscreen-mode');
-        icon.classList.replace('fa-expand', 'fa-compress');
+        if(icon) icon.classList.replace('fa-expand', 'fa-compress');
         if(text) text.innerText = "تصغير";
         isVideoFullscreen = true;
     } else {
@@ -438,7 +476,7 @@ function toggleVideoFullscreen() {
         else if (document.msExitFullscreen) document.msExitFullscreen();
         
         section.classList.remove('video-fullscreen-mode');
-        icon.classList.replace('fa-compress', 'fa-expand');
+        if(icon) icon.classList.replace('fa-compress', 'fa-expand');
         if(text) text.innerText = "ملء الشاشة";
         isVideoFullscreen = false;
     }
@@ -451,7 +489,7 @@ function exitHandler() {
         const section = document.getElementById('presentation-section');
         const icon = document.querySelector('#btn-fullscreen i');
         const text = document.querySelector('#btn-fullscreen span');
-        section.classList.remove('video-fullscreen-mode');
+        if(section) section.classList.remove('video-fullscreen-mode');
         if(icon) icon.classList.replace('fa-compress', 'fa-expand');
         if(text) text.innerText = "ملء الشاشة";
         isVideoFullscreen = false;
@@ -460,21 +498,23 @@ function exitHandler() {
 
 function toggleAssistantPanel() {
     const panel = document.getElementById('assistant-panel');
-    panel.classList.toggle('translate-y-full');
-    panel.classList.toggle('hidden');
+    if(panel) {
+        panel.classList.toggle('translate-y-full');
+        panel.classList.toggle('hidden');
+    }
 }
 
 function toggleWhiteboard() {
     const wb = document.getElementById('whiteboard-container');
-    wb.classList.toggle('hidden');
+    if(wb) wb.classList.toggle('hidden');
 }
 
 function refreshStream() {
     const iframe = document.getElementById('yt-iframe');
-    iframe.src = iframe.src; 
+    if(iframe) iframe.src = iframe.src; 
 }
 
-// 9. دوال الإدارة والمدربين
+// 10. دوال الإدارة والمدربين
 function generateTrainerLink() {
     const baseUrl = window.location.href.split('?')[0];
     const trainerLink = baseUrl + "?invite=trainer";
@@ -499,16 +539,20 @@ function triggerWorkshopsStatusForEveryone(start) {
 }
 
 function startWorkshops(isAutoTriggered) {
-    document.getElementById('youtube-container').classList.add('hidden');
-    document.getElementById('whiteboard-container').classList.add('hidden');
-    document.getElementById('jitsi-container').classList.remove('hidden');
+    const ytCont = document.getElementById('youtube-container');
+    const wbCont = document.getElementById('whiteboard-container');
+    const jitsiCont = document.getElementById('jitsi-container');
+    
+    if(ytCont) ytCont.classList.add('hidden');
+    if(wbCont) wbCont.classList.add('hidden');
+    if(jitsiCont) jitsiCont.classList.remove('hidden');
     
     const roomNumber = 'IqraAcademy_Live_Workshop_Official'; 
     const isAdmin = (currentUser.role === 'admin' || currentUser.role === 'trainer' || currentUser.role === 'assistant');
 
     const options = {
         roomName: roomNumber, width: '100%', height: '100%',
-        parentNode: document.getElementById('jitsi-container'),
+        parentNode: jitsiCont,
         userInfo: { displayName: currentUser.name },
         configOverwrite: { 
             prejoinPageEnabled: true, 
@@ -532,14 +576,21 @@ function startWorkshops(isAutoTriggered) {
 
 function closeWorkshops(isAutoTriggered) {
     if (jitsiApi) { jitsiApi.dispose(); jitsiApi = null; }
-    document.getElementById('jitsi-container').classList.add('hidden');
-    document.getElementById('whiteboard-container').classList.add('hidden');
-    document.getElementById('youtube-container').classList.remove('hidden');
+    const ytCont = document.getElementById('youtube-container');
+    const wbCont = document.getElementById('whiteboard-container');
+    const jitsiCont = document.getElementById('jitsi-container');
+    
+    if(jitsiCont) jitsiCont.classList.add('hidden');
+    if(wbCont) wbCont.classList.add('hidden');
+    if(ytCont) ytCont.classList.remove('hidden');
+    
     if(isAutoTriggered) refreshStream(); 
 }
 
 function updateStreamLink() {
-    const newId = document.getElementById('emergency-link').value.trim();
+    const newIdInput = document.getElementById('emergency-link');
+    if(!newIdInput) return;
+    const newId = newIdInput.value.trim();
     if(newId && typeof callAPI === 'function') {
         callAPI('updateRoomSettings', { key: 'live_yt_id', value: newId }).then(() => {
             alert("تم تحديث مسار بث يوتيوب بنجاح.");
@@ -554,11 +605,14 @@ function endSession() {
             callAPI('updateRoomSettings', { key: 'live_yt_id', value: 'ENDED' }); 
             callAPI('updateRoomSettings', { key: 'workshops_active', value: 'false' });
         }
-        showFarewellScreen(); // الإغلاق عند الإدارة فوراً
+        // الإغلاق عند الإدارة فوراً
+        if(!document.getElementById('farewell-screen-active')) {
+            showFarewellScreen(); 
+        }
     }
 }
 
-// 10. إرسال الحضور والانصراف لجوجل شيت عند الإغلاق
+// 11. إرسال الحضور والانصراف لجوجل شيت عند الإغلاق
 window.addEventListener('beforeunload', function () {
     const leaveTime = new Date().toISOString();
     if (typeof callAPI === 'function' && currentUser.role === 'student') {
