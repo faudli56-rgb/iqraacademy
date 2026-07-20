@@ -656,14 +656,54 @@ async function handleLoginSubmit(e) {
             if(res.role !== 'admin') {
                 document.getElementById('tab-btn-content').style.display = 'none';
                 document.getElementById('tab-btn-settings').style.display = 'none';
-            // --- التحكم بالصلاحيات وإظهار/إخفاء سجل الزوار ---
-            if(res.role !== 'admin') {
+            // --- التحكم بالصلاحيات الجديدة والتوجيه الصحيح للوحات ---
+            var adminTabsWrapper = document.querySelector('.flex.flex-wrap.gap-2.mb-6.bg-white.p-2.rounded-2xl');
+            
+            if (res.role === 'marketer') {
+                // إخفاء تبويبات المدير بالكامل
+                if(adminTabsWrapper) adminTabsWrapper.style.display = 'none';
+                document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none');
+                
+                // إظهار اللوحة المستقلة للمسوق
+                document.getElementById('marketer-dedicated-dashboard').style.display = 'block';
+                document.getElementById('marketer-dedicated-dashboard').classList.remove('hidden');
+                
+                // تعيين رابط التسويق الجديد
+                var siteUrl = typeof SCRIPT_URL !== 'undefined' ? SCRIPT_URL : window.location.href.split('?')[0];
+                document.getElementById('marketer-link-input-new').value = siteUrl + "?ref=" + res.marketerCode;
+                
+                // تشغيل جلب البيانات
+                loadMarketerDashboard();
+
+            } else if (res.role === 'trainer') {
+                if(adminTabsWrapper) adminTabsWrapper.style.display = 'flex';
                 document.getElementById('tab-btn-content').style.display = 'none';
                 document.getElementById('tab-btn-settings').style.display = 'none';
                 if(document.getElementById('tab-btn-ads-news')) document.getElementById('tab-btn-ads-news').style.display = 'none';
                 if(document.getElementById('tab-btn-payments')) document.getElementById('tab-btn-payments').style.display = 'none';
                 document.getElementById('tab-title-users').innerText = "طلابي المسجلين";
                 switchAdminTab('tab-stats', document.getElementById('tab-btn-stats'));
+                var visitorLogsDiv = document.getElementById('admin-only-visitor-logs');
+                if(visitorLogsDiv) visitorLogsDiv.classList.add('hidden');
+                
+                loadDashboardData(res.role, res.marketerCode, res.name);
+                loadStatsData(res.role, res.marketerCode, res.name);
+                
+            } else if (res.role === 'admin') {
+                if(adminTabsWrapper) adminTabsWrapper.style.display = 'flex';
+                document.getElementById('tab-btn-content').style.display = 'block';
+                document.getElementById('tab-btn-settings').style.display = 'block';
+                if(document.getElementById('tab-btn-ads-news')) document.getElementById('tab-btn-ads-news').style.display = 'block';
+                if(document.getElementById('tab-btn-payments')) document.getElementById('tab-btn-payments').style.display = 'block';
+                document.getElementById('tab-title-users').innerText = "إدارة المتدربين";
+                
+                var visitorLogsDiv = document.getElementById('admin-only-visitor-logs');
+                if(visitorLogsDiv) visitorLogsDiv.classList.remove('hidden');
+                
+                loadDashboardData(res.role, res.marketerCode, res.name);
+                loadStatsData(res.role, res.marketerCode, res.name);
+                loadVisitorLogs(); 
+            }
                 
                 // إخفاء سجل الزوار كلياً عن غير المدير
                 var visitorLogsDiv = document.getElementById('admin-only-visitor-logs');
@@ -792,7 +832,6 @@ async function loadDashboardData(role, code, name) {
         console.error('خطأ في جلب بيانات الجدول:', e);
     }
 }
-
 // ==========================================
 // دوال الإحصائيات
 // ==========================================
@@ -2302,3 +2341,187 @@ async function loadVisitorLogs() {
 // متغير لحفظ بيانات جلسة الطالب الحالية
 var currentLiveSession = null;
 window.addEventListener('DOMContentLoaded', initializeWebsiteLayout);
+// ==========================================
+// دوال لوحة المسوق الديناميكية (الجديدة)
+// ==========================================
+
+let allMarketerData = null;
+
+function copyMarketerLinkNew() {
+    var copyText = document.getElementById("marketer-link-input-new");
+    copyText.select();
+    document.execCommand("copy");
+    var btn = document.getElementById("btn-copy-link-new");
+    btn.innerHTML = '<i class="fas fa-check"></i> تم النسخ!';
+    btn.classList.replace('bg-emerald-600', 'bg-emerald-800');
+    setTimeout(function() { 
+        btn.innerHTML = '<i class="fas fa-copy ml-1"></i> نسخ الرابط'; 
+        btn.classList.replace('bg-emerald-800', 'bg-emerald-600');
+    }, 3000);
+}
+
+function switchMarketerTab(tabId) {
+    document.querySelectorAll('.mk-content-section').forEach(el => {
+        el.classList.add('hidden');
+        el.classList.remove('block');
+    });
+    document.querySelectorAll('.mk-tab-btn').forEach(btn => {
+        btn.classList.remove('bg-[#0B1F4D]', 'text-white', 'shadow');
+        btn.classList.add('bg-transparent', 'text-slate-600');
+    });
+    
+    document.getElementById('mk-' + tabId + '-tab').classList.remove('hidden');
+    document.getElementById('mk-' + tabId + '-tab').classList.add('block');
+    
+    let activeBtn = document.getElementById('mk-tab-btn-' + tabId);
+    if(activeBtn) {
+        activeBtn.classList.remove('bg-transparent', 'text-slate-600');
+        activeBtn.classList.add('bg-[#0B1F4D]', 'text-white', 'shadow');
+    }
+    
+    if(tabId === 'withdrawals') {
+        loadWithdrawalsHistory();
+    }
+}
+
+async function loadMarketerDashboard() {
+    var marketerCode = sessionStorage.getItem('code');
+    const res = await getMarketerFullData(marketerCode);
+    
+    if (res.success) {
+        allMarketerData = res.data;
+        
+        // تعبئة بيانات الرئيسية
+        document.getElementById('mk-total-students').innerText = allMarketerData.totalStudents;
+        document.getElementById('mk-current-tier').innerText = '%' + Math.round(allMarketerData.currentTierPct * 100);
+        document.getElementById('mk-total-earnings').innerText = allMarketerData.totalEarnings + '$';
+        document.getElementById('mk-available-balance').innerText = allMarketerData.availableBalance + '$';
+        
+        // تعبئة شريط التقدم
+        let currentTotal = allMarketerData.totalStudents;
+        let progressTarget = currentTotal < 51 ? 51 : (currentTotal < 200 ? 200 : currentTotal);
+        let progressPct = Math.min(100, (currentTotal / progressTarget) * 100);
+        
+        document.getElementById('mk-progress-current').innerText = currentTotal;
+        document.getElementById('mk-progress-bar').style.width = progressPct + '%';
+        let targetText = currentTotal < 51 ? "الهدف لرفع النسبة لـ 25%: 51 طالب" : (currentTotal < 200 ? "الهدف لرفع النسبة لـ 30%: 200 طالب" : "وصلت للحد الأقصى 30%");
+        document.getElementById('mk-progress-next-text').innerText = targetText;
+        
+        // تعبئة قائمة الدورات
+        let select = document.getElementById('marketer-course-selector');
+        select.innerHTML = '<option value="" disabled selected>تصفح الدورات 🔽</option>';
+        Object.keys(allMarketerData.courses).forEach(courseName => {
+            select.innerHTML += `<option value="${courseName}">${courseName}</option>`;
+        });
+    } else {
+        showToast("فشل جلب بيانات المسوق.", true);
+    }
+}
+
+function loadSpecificCourseData(courseName) {
+    if(!courseName || !allMarketerData || !allMarketerData.courses[courseName]) return;
+    
+    let courseData = allMarketerData.courses[courseName];
+    
+    switchMarketerTab('course');
+    document.getElementById('mk-course-title').innerText = courseName;
+    document.getElementById('mk-c-enrolled').innerText = courseData.enrolled;
+    document.getElementById('mk-c-paid').innerText = courseData.paid;
+    document.getElementById('mk-c-earnings').innerText = courseData.totalEarnings + '$';
+    document.getElementById('mk-c-pending').innerText = courseData.pendingBalance + '$';
+    
+    let tbody = document.getElementById('mk-course-students-body');
+    tbody.innerHTML = '';
+    
+    if(courseData.students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">لا يوجد طلاب مسجلين</td></tr>';
+        return;
+    }
+    
+    courseData.students.forEach(st => {
+        let commStatus = st.commissionPaid ? '<span class="text-emerald-500 font-bold"><i class="fas fa-check"></i> صُرفت</span>' : '<span class="text-rose-500 font-bold">معلقة</span>';
+        let paidBadge = st.isPaid ? '<span class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded">مسدد</span>' : '<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded">لم يسدد</span>';
+        let certBadge = st.certIssued ? '<i class="fas fa-certificate text-emerald-500"></i>' : '-';
+        
+        tbody.innerHTML += `
+            <tr class="hover:bg-slate-50 transition border-b border-slate-50">
+                <td class="p-4 font-bold text-[#0B1F4D] text-[11px]">${st.name}</td>
+                <td class="p-4 text-slate-500 dir-ltr text-left text-[11px]">${st.phone}</td>
+                <td class="p-4 text-slate-400 text-[10px]">${st.date}</td>
+                <td class="p-4">${paidBadge}</td>
+                <td class="p-4 text-center text-lg">${certBadge}</td>
+                <td class="p-4 text-center font-black text-[#D4A017] text-sm">${st.commissionValue}$<div class="text-[9px] mt-1">${commStatus}</div></td>
+            </tr>
+        `;
+    });
+}
+
+async function requestWithdrawal() {
+    let availableText = document.getElementById('mk-available-balance').innerText.replace('$', '');
+    let available = parseFloat(availableText);
+    
+    if (available <= 0) {
+        alert("عفواً، لا يوجد رصيد متاح للسحب حالياً.");
+        return;
+    }
+
+    let amountStr = prompt(`رصيدك المتاح للسحب هو ${available}$\nأدخل المبلغ الذي ترغب بسحبه الآن:`);
+    if (!amountStr) return; 
+
+    let amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0 || amount > available) {
+        alert("المبلغ المدخل غير صحيح أو يتجاوز الرصيد المتاح.");
+        return;
+    }
+
+    document.body.style.cursor = 'wait';
+    let res = await requestWithdrawalAction(sessionStorage.getItem('code'), amount);
+    document.body.style.cursor = 'default';
+
+    if (res.success) {
+        alert("✅ تم إرسال طلب السحب بنجاح! سيتم مراجعته قريباً.");
+        loadMarketerDashboard(); 
+        switchMarketerTab('withdrawals');
+    } else {
+        alert("❌ حدث خطأ: " + res.error);
+    }
+}
+
+async function loadWithdrawalsHistory() {
+    let tbody = document.getElementById('mk-withdrawals-body');
+    tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">جاري التحميل...</td></tr>';
+    
+    let res = await fetchWithdrawalsHistory(sessionStorage.getItem('code'));
+    
+    if (res.success) {
+        tbody.innerHTML = '';
+        let totalWithdrawn = 0;
+
+        if (res.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400 font-bold">لا توجد عمليات سحب مسجلة حتى الآن.</td></tr>';
+            document.getElementById('mk-total-withdrawn').innerText = '0$';
+            return;
+        }
+
+        res.data.forEach(w => {
+            if (w.status === 'مكتمل') totalWithdrawn += parseFloat(w.amount);
+            
+            let statusBadge = '';
+            if (w.status === 'قيد المراجعة') statusBadge = '<span class="bg-amber-50 text-amber-600 border border-amber-200 px-2 py-1 rounded font-bold">قيد المراجعة</span>';
+            else if (w.status === 'مكتمل') statusBadge = '<span class="bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-1 rounded font-bold">مكتمل</span>';
+            else statusBadge = '<span class="bg-rose-50 text-rose-600 border border-rose-200 px-2 py-1 rounded font-bold">مرفوض</span>';
+
+            tbody.innerHTML += `
+                <tr class="hover:bg-slate-50 transition border-b border-slate-50">
+                    <td class="p-4 font-bold text-[#0B1F4D] text-[11px]">${w.id}</td>
+                    <td class="p-4 text-slate-500 font-medium text-[10px]">${w.date}</td>
+                    <td class="p-4 font-black text-emerald-600 text-sm">${w.amount}$</td>
+                    <td class="p-4">${statusBadge}</td>
+                    <td class="p-4 text-slate-400 text-[10px] truncate max-w-[150px]">${w.notes || '-'}</td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('mk-total-withdrawn').innerText = totalWithdrawn + '$';
+    }
+}
