@@ -2391,21 +2391,11 @@ async function loadMarketerDashboard() {
     if (res.success) {
         allMarketerData = res.data;
         
-        // تعبئة بيانات الرئيسية
+        // تعبئة بيانات الرئيسية (بالريال اليمني)
         document.getElementById('mk-total-students').innerText = allMarketerData.totalStudents;
         document.getElementById('mk-current-tier').innerText = '%' + Math.round(allMarketerData.currentTierPct * 100);
-        document.getElementById('mk-total-earnings').innerText = allMarketerData.totalEarnings + '$';
-        document.getElementById('mk-available-balance').innerText = allMarketerData.availableBalance + '$';
-        
-        // تعبئة شريط التقدم
-        let currentTotal = allMarketerData.totalStudents;
-        let progressTarget = currentTotal < 51 ? 51 : (currentTotal < 200 ? 200 : currentTotal);
-        let progressPct = Math.min(100, (currentTotal / progressTarget) * 100);
-        
-        document.getElementById('mk-progress-current').innerText = currentTotal;
-        document.getElementById('mk-progress-bar').style.width = progressPct + '%';
-        let targetText = currentTotal < 51 ? "الهدف لرفع النسبة لـ 25%: 51 طالب" : (currentTotal < 200 ? "الهدف لرفع النسبة لـ 30%: 200 طالب" : "وصلت للحد الأقصى 30%");
-        document.getElementById('mk-progress-next-text').innerText = targetText;
+        document.getElementById('mk-total-earnings').innerText = allMarketerData.totalEarnings + ' ر.ي';
+        document.getElementById('mk-available-balance').innerText = allMarketerData.availableBalance + ' ر.ي';
         
         // تعبئة قائمة الدورات
         let select = document.getElementById('marketer-course-selector');
@@ -2414,7 +2404,7 @@ async function loadMarketerDashboard() {
             select.innerHTML += `<option value="${courseName}">${courseName}</option>`;
         });
     } else {
-        showToast("فشل جلب بيانات المسوق.", true);
+        alert("فشل جلب بيانات المسوق.");
     }
 }
 
@@ -2427,9 +2417,43 @@ function loadSpecificCourseData(courseName) {
     document.getElementById('mk-course-title').innerText = courseName;
     document.getElementById('mk-c-enrolled').innerText = courseData.enrolled;
     document.getElementById('mk-c-paid').innerText = courseData.paid;
-    document.getElementById('mk-c-earnings').innerText = courseData.totalEarnings + '$';
-    document.getElementById('mk-c-pending').innerText = courseData.pendingBalance + '$';
+    document.getElementById('mk-c-earnings').innerText = courseData.totalEarnings + ' ر.ي';
+    document.getElementById('mk-c-pending').innerText = courseData.pendingBalance + ' ر.ي';
     
+    // ======================================================
+    // حساب شريط التقدم الخاص بطلاب هذه الدورة فقط
+    // ======================================================
+    let currentCourseStudents = courseData.enrolled;
+    let nextTarget = 0;
+    let nextPctText = "";
+    let remaining = 0;
+
+    if (currentCourseStudents < 51) {
+        nextTarget = 51;
+        nextPctText = "25%";
+        remaining = nextTarget - currentCourseStudents;
+    } else if (currentCourseStudents < 200) {
+        nextTarget = 200;
+        nextPctText = "30%";
+        remaining = nextTarget - currentCourseStudents;
+    } else {
+        nextTarget = currentCourseStudents; // وصل للحد الأقصى
+        remaining = 0;
+    }
+
+    let progressPct = currentCourseStudents >= 200 ? 100 : (currentCourseStudents / nextTarget) * 100;
+    
+    document.getElementById('mk-progress-current').innerText = "إجمالي طلابك: " + currentCourseStudents;
+    document.getElementById('mk-progress-bar').style.width = progressPct + '%';
+    
+    // كتابة النص بالشكل المطلوب (متبقي X للوصول إلى Y%)
+    let targetText = remaining > 0 
+        ? `متبقي ${remaining} طالب للوصول إلى نسبة ${nextPctText}` 
+        : "وصلت للحد الأقصى للعمولة 30%";
+    
+    document.getElementById('mk-progress-next-text').innerText = targetText;
+    // ======================================================
+
     let tbody = document.getElementById('mk-course-students-body');
     tbody.innerHTML = '';
     
@@ -2450,22 +2474,22 @@ function loadSpecificCourseData(courseName) {
                 <td class="p-4 text-slate-400 text-[10px]">${st.date}</td>
                 <td class="p-4">${paidBadge}</td>
                 <td class="p-4 text-center text-lg">${certBadge}</td>
-                <td class="p-4 text-center font-black text-[#D4A017] text-sm">${st.commissionValue}$<div class="text-[9px] mt-1">${commStatus}</div></td>
+                <td class="p-4 text-center font-black text-[#D4A017] text-sm">${st.commissionValue} ر.ي<div class="text-[9px] mt-1">${commStatus}</div></td>
             </tr>
         `;
     });
 }
-
 async function requestWithdrawal() {
-    let availableText = document.getElementById('mk-available-balance').innerText.replace('$', '');
+    // تنظيف النص من رمز العملة لاستخراج الرقم الصافي
+    let availableText = document.getElementById('mk-available-balance').innerText.replace('ر.ي', '').trim();
     let available = parseFloat(availableText);
     
-    if (available <= 0) {
+    if (isNaN(available) || available <= 0) {
         alert("عفواً، لا يوجد رصيد متاح للسحب حالياً.");
         return;
     }
 
-    let amountStr = prompt(`رصيدك المتاح للسحب هو ${available}$\nأدخل المبلغ الذي ترغب بسحبه الآن:`);
+    let amountStr = prompt(`رصيدك المتاح للسحب هو ${available} ر.ي\nأدخل المبلغ الذي ترغب بسحبه الآن:`);
     if (!amountStr) return; 
 
     let amount = parseFloat(amountStr);
@@ -2486,7 +2510,6 @@ async function requestWithdrawal() {
         alert("❌ حدث خطأ: " + res.error);
     }
 }
-
 async function loadWithdrawalsHistory() {
     let tbody = document.getElementById('mk-withdrawals-body');
     tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">جاري التحميل...</td></tr>';
@@ -2499,7 +2522,7 @@ async function loadWithdrawalsHistory() {
 
         if (res.data.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400 font-bold">لا توجد عمليات سحب مسجلة حتى الآن.</td></tr>';
-            document.getElementById('mk-total-withdrawn').innerText = '0$';
+            document.getElementById('mk-total-withdrawn').innerText = '0 ر.ي';
             return;
         }
 
@@ -2515,13 +2538,13 @@ async function loadWithdrawalsHistory() {
                 <tr class="hover:bg-slate-50 transition border-b border-slate-50">
                     <td class="p-4 font-bold text-[#0B1F4D] text-[11px]">${w.id}</td>
                     <td class="p-4 text-slate-500 font-medium text-[10px]">${w.date}</td>
-                    <td class="p-4 font-black text-emerald-600 text-sm">${w.amount}$</td>
+                    <td class="p-4 font-black text-emerald-600 text-sm">${w.amount} ر.ي</td>
                     <td class="p-4">${statusBadge}</td>
                     <td class="p-4 text-slate-400 text-[10px] truncate max-w-[150px]">${w.notes || '-'}</td>
                 </tr>
             `;
         });
 
-        document.getElementById('mk-total-withdrawn').innerText = totalWithdrawn + '$';
+        document.getElementById('mk-total-withdrawn').innerText = totalWithdrawn + ' ر.ي';
     }
 }
