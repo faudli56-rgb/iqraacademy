@@ -652,7 +652,10 @@ async function handleLoginSubmit(e) {
             } else {
                 document.getElementById('marketer-link-box').classList.add('hidden');
             }
-
+         // --- التحكم بالصلاحيات وإظهار/إخفاء سجل الزوار ---
+            if(res.role !== 'admin') {
+                document.getElementById('tab-btn-content').style.display = 'none';
+                document.getElementById('tab-btn-settings').style.display = 'none';
             // --- التحكم بالصلاحيات وإظهار/إخفاء سجل الزوار ---
             if(res.role !== 'admin') {
                 document.getElementById('tab-btn-content').style.display = 'none';
