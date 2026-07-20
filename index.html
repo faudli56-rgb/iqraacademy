@@ -537,31 +537,27 @@
 
                 <!-- تبويب الرئيسية -->
                 <div id="mk-home-tab" class="mk-content-section block">
-                   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-    <!-- مربع المتدربين -->
-    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition">
-        <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl border border-blue-100"><i class="fas fa-user-graduate"></i></div>
-        <div><div class="text-sm text-slate-700 font-black">إجمالي المتدربين</div></div>
-    </div>
-    
-    <!-- مربع الشهادات -->
-    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition">
-        <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl border border-emerald-100"><i class="fas fa-certificate"></i></div>
-        <div><div class="text-sm text-slate-700 font-black">الشهادات الصادرة</div></div>
-    </div>
-    
-    <!-- مربع المسوقين -->
-    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition">
-        <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl border border-amber-100"><i class="fas fa-handshake"></i></div>
-        <div><div class="text-sm text-slate-700 font-black">المسوقين النشطين</div></div>
-    </div>
-    
-    <!-- مربع الإيرادات -->
-    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition">
-        <div class="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center text-2xl border border-rose-100"><i class="fas fa-wallet"></i></div>
-        <div><div class="text-sm text-slate-700 font-black">الإيرادات (ريال يمني)</div></div>
-    </div>
-</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 text-right hover:shadow-md transition">
+                            <div class="text-[10px] text-slate-400 font-bold mb-1">إجمالي الطلاب</div>
+                            <div class="text-2xl font-black text-[#0B1F4D]" id="mk-total-students">0</div>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 text-right hover:shadow-md transition">
+                            <div class="text-[10px] text-slate-400 font-bold mb-1">نسبة العمولة الحالية</div>
+                            <div class="text-2xl font-black text-emerald-600" id="mk-current-tier">%20</div>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 text-right hover:shadow-md transition">
+                            <div class="text-[10px] text-slate-400 font-bold mb-1">إجمالي الأرباح منذ البداية</div>
+                            <div class="text-2xl font-black text-[#D4A017]" id="mk-total-earnings">0$</div>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border-rose-200 bg-rose-50 text-right flex flex-col justify-between hover:shadow-md transition">
+                            <div>
+                                <div class="text-[10px] text-rose-500 font-bold mb-1">الرصيد المتاح للسحب</div>
+                                <div class="text-2xl font-black text-rose-600" id="mk-available-balance">0$</div>
+                            </div>
+                            <button onclick="requestWithdrawal()" class="mt-2 w-full bg-rose-600 text-white py-2 rounded-xl text-xs font-bold hover:bg-rose-700 transition shadow">طلب سحب الأرباح</button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- تبويب الدورة -->
