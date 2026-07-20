@@ -509,7 +509,117 @@
                 <button id="tab-btn-ads-news" onclick="switchAdminTab('tab-ads-news', this)" class="admin-tab-btn flex-1 bg-transparent text-slate-600 hover:bg-slate-50 px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold transition"><i class="fas fa-bullhorn ml-1.5 text-amber-500"></i> الإعلانات والأخبار</button>
                 <button id="tab-btn-settings" onclick="switchAdminTab('tab-settings', this)" class="admin-tab-btn flex-1 bg-transparent text-slate-600 hover:bg-slate-50 px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold transition"><i class="fas fa-cog ml-1.5"></i> الإعدادات</button>
             </div>
+<!-- ============================================== -->
+            <!-- لوحة المسوق الجديدة والمستقلة -->
+            <!-- ============================================== -->
+            <div id="marketer-dedicated-dashboard" class="hidden">
+                <div id="marketer-link-box-new" class="bg-emerald-50 border border-emerald-200 p-5 rounded-2xl mb-6 shadow-sm">
+                    <h3 class="text-sm font-black text-emerald-800 mb-3"><i class="fas fa-link ml-2"></i> رابط التسويق الخاص بك:</h3>
+                    <div class="flex flex-col md:flex-row gap-3">
+                        <input type="text" id="marketer-link-input-new" readonly class="w-full px-4 py-3 rounded-xl border border-emerald-200 bg-white text-left dir-ltr text-sm font-bold text-slate-600 focus:outline-none shadow-inner">
+                        <button onclick="copyMarketerLinkNew()" id="btn-copy-link-new" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl text-xs font-bold transition shadow-md whitespace-nowrap"><i class="fas fa-copy ml-1"></i> نسخ الرابط</button>
+                    </div>
+                </div>
 
+                <!-- القائمة العلوية الخاصة بالمسوق -->
+                <div class="flex flex-wrap gap-2 mb-6 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+                    <button onclick="switchMarketerTab('home')" id="mk-tab-btn-home" class="mk-tab-btn flex-1 bg-[#0B1F4D] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition shadow">الرئيسية</button>
+                    
+                    <!-- قائمة الدورات المنسدلة -->
+                    <div class="relative flex-1">
+                        <select id="marketer-course-selector" onchange="loadSpecificCourseData(this.value)" class="w-full bg-transparent text-slate-600 hover:bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition appearance-none cursor-pointer outline-none text-center">
+                            <option value="" disabled selected>تصفح الدورات 🔽</option>
+                        </select>
+                    </div>
+                    
+                    <button onclick="switchMarketerTab('withdrawals')" id="mk-tab-btn-withdrawals" class="mk-tab-btn flex-1 bg-transparent text-slate-600 hover:bg-slate-50 px-4 py-2.5 rounded-xl text-xs font-bold transition">سجل السحب</button>
+                </div>
+
+                <!-- تبويب الرئيسية -->
+                <div id="mk-home-tab" class="mk-content-section block">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 text-right hover:shadow-md transition">
+                            <div class="text-[10px] text-slate-400 font-bold mb-1">إجمالي الطلاب</div>
+                            <div class="text-2xl font-black text-[#0B1F4D]" id="mk-total-students">0</div>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 text-right hover:shadow-md transition">
+                            <div class="text-[10px] text-slate-400 font-bold mb-1">نسبة العمولة الحالية</div>
+                            <div class="text-2xl font-black text-emerald-600" id="mk-current-tier">%20</div>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 text-right hover:shadow-md transition">
+                            <div class="text-[10px] text-slate-400 font-bold mb-1">إجمالي الأرباح منذ البداية</div>
+                            <div class="text-2xl font-black text-[#D4A017]" id="mk-total-earnings">0$</div>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border-rose-200 bg-rose-50 text-right flex flex-col justify-between hover:shadow-md transition">
+                            <div>
+                                <div class="text-[10px] text-rose-500 font-bold mb-1">الرصيد المتاح للسحب</div>
+                                <div class="text-2xl font-black text-rose-600" id="mk-available-balance">0$</div>
+                            </div>
+                            <button onclick="requestWithdrawal()" class="mt-2 w-full bg-rose-600 text-white py-2 rounded-xl text-xs font-bold hover:bg-rose-700 transition shadow">طلب سحب الأرباح</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- تبويب الدورة -->
+                <div id="mk-course-tab" class="mk-content-section hidden">
+                    <div class="bg-[#0B1F4D] text-white p-5 rounded-2xl mb-6 flex justify-between items-center shadow-md">
+                        <h3 class="font-black text-sm lg:text-lg" id="mk-course-title">اختر دورة</h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white p-4 rounded-xl border border-slate-100 text-center"><div class="text-[10px] text-slate-400 mb-1">مسجلين</div><div class="font-black text-[#0B1F4D] text-xl" id="mk-c-enrolled">0</div></div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-100 text-center"><div class="text-[10px] text-slate-400 mb-1">مسددين</div><div class="font-black text-emerald-600 text-xl" id="mk-c-paid">0</div></div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-100 text-center"><div class="text-[10px] text-slate-400 mb-1">أرباح الدورة</div><div class="font-black text-[#D4A017] text-xl" id="mk-c-earnings">0$</div></div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-100 text-center"><div class="text-[10px] text-slate-400 mb-1">رصيد مستحق</div><div class="font-black text-rose-500 text-xl" id="mk-c-pending">0$</div></div>
+                    </div>
+
+                    <!-- شريط التقدم -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 mb-6 shadow-sm">
+                        <div class="flex justify-between text-[11px] font-bold mb-3 text-slate-600">
+                            <span>إجمالي طلابك: <span id="mk-progress-current" class="text-emerald-600">0</span></span>
+                            <span id="mk-progress-next-text" class="bg-slate-100 px-2 py-1 rounded">الهدف لرفع النسبة لـ 25%: 51 طالب</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                            <div id="mk-progress-bar" class="bg-[#D4A017] h-3 rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- جدول طلاب الدورة -->
+                    <h3 class="font-bold text-[#0B1F4D] text-sm mb-3"><i class="fas fa-users ml-2 text-slate-400"></i>سجل طلاب هذه الدورة</h3>
+                    <div class="overflow-x-auto rounded-xl border border-slate-100">
+                        <table class="w-full text-right text-xs border-collapse bg-white">
+                            <thead class="bg-slate-50 text-slate-500">
+                                <tr><th class="p-4">الطالب</th><th class="p-4">رقم الهاتف</th><th class="p-4">تاريخ التسجيل</th><th class="p-4">السداد</th><th class="p-4">الشهادة</th><th class="p-4 text-center">العمولة</th></tr>
+                            </thead>
+                            <tbody id="mk-course-students-body" class="divide-y divide-slate-50"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- تبويب سجل السحوبات -->
+                <div id="mk-withdrawals-tab" class="mk-content-section hidden">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-6 flex justify-between items-center text-right relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-2 h-full bg-emerald-500"></div>
+                        <div>
+                            <div class="text-xs text-slate-400 font-bold mb-1">إجمالي المبالغ المسحوبة مسبقاً</div>
+                            <div class="text-3xl font-black text-[#0B1F4D]" id="mk-total-withdrawn">0$</div>
+                        </div>
+                        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center border border-emerald-100">
+                            <i class="fas fa-money-check-alt text-2xl text-emerald-500"></i>
+                        </div>
+                    </div>
+
+                    <h3 class="font-bold text-[#0B1F4D] text-sm mb-3"><i class="fas fa-history ml-2 text-slate-400"></i>سجل العمليات السابقة</h3>
+                    <div class="overflow-x-auto rounded-xl border border-slate-100">
+                        <table class="w-full text-right text-xs border-collapse bg-white">
+                            <thead class="bg-slate-50 text-slate-500">
+                                <tr><th class="p-4">رقم العملية</th><th class="p-4">التاريخ</th><th class="p-4">المبلغ</th><th class="p-4">الحالة</th><th class="p-4">ملاحظات</th></tr>
+                            </thead>
+                            <tbody id="mk-withdrawals-body" class="divide-y divide-slate-50"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
             <div id="tab-stats" class="admin-tab-content block">
                 <div id="marketer-link-box" class="hidden bg-emerald-50 border border-emerald-200 p-5 rounded-2xl mb-6 shadow-sm">
                     <h3 class="text-sm font-black text-emerald-800 mb-3"><i class="fas fa-link ml-2"></i> رابط التسويق الخاص بك (انسخه وشاركه مع الطلاب):</h3>
