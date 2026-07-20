@@ -832,53 +832,43 @@ async function loadDashboardData(role, code, name) {
         console.error('خطأ في جلب بيانات الجدول:', e);
     }
 }
-// ==========================================
-// دالة جلب الإحصائيات (النسخة الآمنة والمصححة)
-// ==========================================
 async function loadStatsData(role, code, name) {
     try {
         const res = await getAdminStats(role, code, name);
+        
         if(res && res.success) {
-            // استهداف مباشر وصريح لكل مربع إحصائيات لمنع تداخل الأرقام مع الأيقونات
-            var statsCards = document.querySelectorAll('#tab-stats .grid > div');
+            // 💡 التعديل هنا: تمت إضافة .font-black لاستهداف مكان الرقم فقط وترك الأيقونات
+            var statsEls = document.querySelectorAll('#tab-stats .grid .text-2xl.font-black');
             
-            if (statsCards.length >= 4) {
-                // المربع الأول: إجمالي المتدربين
-                var studentsNumber = statsCards[0].querySelector('.text-2xl.font-black');
-                if (studentsNumber) studentsNumber.innerText = res.studentsCount;
+            for(var i=0; i<statsEls.length; i++) {
+                var el = statsEls[i];
+                var parentContent = el.parentNode.parentNode.innerHTML + el.parentNode.innerHTML;
                 
-                // المربع الثاني: الشهادات الصادرة
-                var certsNumber = statsCards[1].querySelector('.text-2xl.font-black');
-                if (certsNumber) certsNumber.innerText = res.certsCount;
-                
-                // المربع الثالث: المسوقين النشطين
-                var marketersNumber = statsCards[2].querySelector('.text-2xl.font-black');
-                if (marketersNumber) {
+                if (parentContent.includes('إجمالي المتدربين')) {
+                    el.innerText = res.studentsCount;
+                } else if (parentContent.includes('الشهادات الصادرة')) {
+                    el.innerText = res.certsCount;
+                } else if (parentContent.includes('المسوقين النشطين')) {
                     if (res.userType === 'admin') {
-                        marketersNumber.innerHTML = '<select class="w-full text-center bg-transparent border-0 focus:ring-0 cursor-pointer" style="font-size:16px; outline:none; appearance:none;">' +
+                        el.innerHTML = '<select class="w-full text-center bg-transparent border-0 focus:ring-0 cursor-pointer" style="font-size:16px; outline:none; appearance:none;">' +
                                        '<option value="">العدد: ' + res.marketersCount + ' 🔽</option>' + 
                                        res.marketersOptions + 
                                        '</select>';
                     } else {
-                        marketersNumber.innerText = "-";
+                        el.innerText = "-";
                     }
-                }
-                
-                // المربع الرابع: الإيرادات
-                var revenueNumber = statsCards[3].querySelector('.text-2xl.font-black');
-                if (revenueNumber) {
+                } else if (parentContent.includes('الإيرادات')) {
                     if (res.userType === 'admin') {
-                        revenueNumber.innerHTML = '<select class="w-full text-center bg-transparent border-0 focus:ring-0 cursor-pointer text-green-700 font-bold" style="font-size:16px; outline:none; appearance:none;">' +
+                        el.innerHTML = '<select class="w-full text-center bg-transparent border-0 focus:ring-0 cursor-pointer text-green-700 font-bold" style="font-size:16px; outline:none; appearance:none;">' +
                                        '<option value="">الإجمالي: ' + res.totalRevenueStr + ' 🔽</option>' + 
                                        res.revenueOptions + 
                                        '</select>';
                     } else {
-                        revenueNumber.innerText = res.personalRevenue;
+                        el.innerText = res.personalRevenue;
                     }
                 }
             }
 
-            // كود شريط تقدم المسوق (كما هو بالملف الأصلي تماماً لضمان عمله)
             if (res.userType === 'marketer' && res.nextTierInfo) {
                 var statsContainer = document.querySelector('#tab-stats .grid');
                 if (statsContainer) {
