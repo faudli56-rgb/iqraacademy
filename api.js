@@ -249,3 +249,18 @@ function logVisitorActivity(pageName, sessionId) {
 async function fetchVisitorLogs() {
     return await callAPI('fetchVisitorLogs');
 }
+// ==========================================
+// 13. دوال لوحة المسوق الجديدة وسجل السحوبات
+// ==========================================
+
+async function getMarketerFullData(code) {
+    return await callAPI('getMarketerFullData', { code });
+}
+
+async function requestWithdrawalAction(code, amount) {
+    return await callAPI('requestWithdrawalAction', { code, amount });
+}
+
+async function fetchWithdrawalsHistory(code) {
+    return await callAPI('fetchWithdrawalsHistory', { code });
+}
