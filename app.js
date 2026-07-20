@@ -837,44 +837,100 @@ async function loadStatsData(role, code, name) {
         const res = await getAdminStats(role, code, name);
         
         if(res && res.success) {
-            // تحديث شريط تقدم المسوقين فقط (بدون التدخل في المربعات العلوية)
+            // 💡 التعديل هنا: تمت إضافة .font-black لاستهداف مكان الرقم فقط وترك الأيقونات
+            var statsEls = document.querySelectorAll('#tab-stats .grid .text-2xl.font-black');
+            
+            for(var i=0; i<statsEls.length; i++) {
+                var el = statsEls[i];
+                var parentContent = el.parentNode.parentNode.innerHTML + el.parentNode.innerHTML;
+                
+                if (parentContent.includes('إجمالي المتدربين')) {
+                    el.innerText = res.studentsCount;
+                } else if (parentContent.includes('الشهادات الصادرة')) {
+                    el.innerText = res.certsCount;
+                } else if (parentContent.includes('المسوقين النشطين')) {
+                    if (res.userType === 'admin') {
+                        el.innerHTML = '<select class="w-full text-center bg-transparent border-0 focus:ring-0 cursor-pointer" style="font-size:16px; outline:none; appearance:none;">' +
+                                       '<option value="">العدد: ' + res.marketersCount + ' 🔽</option>' + 
+                                       res.marketersOptions + 
+                                       '</select>';
+                    } else {
+                        el.innerText = "-";
+                    }
+                } else if (parentContent.includes('الإيرادات')) {
+                    if (res.userType === 'admin') {
+                        el.innerHTML = '<select class="w-full text-center bg-transparent border-0 focus:ring-0 cursor-pointer text-green-700 font-bold" style="font-size:16px; outline:none; appearance:none;">' +
+                                       '<option value="">الإجمالي: ' + res.totalRevenueStr + ' 🔽</option>' + 
+                                       res.revenueOptions + 
+                                       '</select>';
+                    } else {
+                        el.innerText = res.personalRevenue;
+                    }
+                }
+            }
+
             if (res.userType === 'marketer' && res.nextTierInfo) {
                 var statsContainer = document.querySelector('#tab-stats .grid');
                 if (statsContainer) {
                     var existingProgress = document.getElementById('marketer-progress-bar');
                     var progressPercent = Math.min(100, (res.studentsCount / 200) * 100);
                     var barColor = '#facc15';
-                    if (progressPercent >= 30) { barColor = '#16a34a'; } else if (progressPercent >= 25) { barColor = '#4ade80'; }
+                    if (progressPercent >= 30) {
+                        barColor = '#16a34a';
+                    } else if (progressPercent >= 25) {
+                        barColor = '#4ade80';
+                    }
                     
                     if (!existingProgress) {
                         var progressHTML = `
                             <div id="marketer-progress-bar" class="col-span-full bg-white p-5 rounded-2xl shadow-md border border-emerald-100 mt-4">
                                 <div class="flex justify-between items-center mb-3">
-                                    <span class="text-sm font-bold text-slate-700"><i class="fas fa-chart-line text-emerald-500 ml-2"></i>تقدمك في نظام العمولات</span>
-                                    <span class="text-sm font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">${res.nextTierInfo}</span>
+                                    <span class="text-sm font-bold text-slate-700">
+                                        <i class="fas fa-chart-line text-emerald-500 ml-2"></i>تقدمك في نظام العمولات
+                                    </span>
+                                    <span class="text-sm font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                                        ${res.nextTierInfo}
+                                    </span>
                                 </div>
                                 <div class="w-full bg-slate-200 rounded-full h-4 overflow-hidden shadow-inner">
-                                    <div id="progress-fill" class="h-4 rounded-full transition-all duration-700 ease-out" style="width: ${progressPercent}%; background: linear-gradient(90deg, #86efac, ${barColor});"></div>
+                                    <div id="progress-fill" class="h-4 rounded-full transition-all duration-700 ease-out" 
+                                         style="width: ${progressPercent}%; background: linear-gradient(90deg, #86efac, ${barColor});">
+                                    </div>
                                 </div>
                                 <div class="flex justify-between text-[11px] font-bold mt-2">
                                     <span class="text-emerald-600">✅ ${res.studentsCount} طالب مسجل</span>
                                     <span class="text-slate-400">🎯 200 طالب (أقصى فئة 30%)</span>
+                                </div>
+                                <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                                    <span>🟢 20% (1-50 طالب)</span>
+                                    <span>🟡 25% (51-200 طالب)</span>
+                                    <span>🔴 30% (200+ طالب)</span>
                                 </div>
                             </div>
                         `;
                         statsContainer.insertAdjacentHTML('beforeend', progressHTML);
                     } else {
                         var fill = document.getElementById('progress-fill');
-                        if (fill) { fill.style.width = progressPercent + '%'; fill.style.background = 'linear-gradient(90deg, #86efac, ' + barColor + ')'; }
-                        var newInfoSpan = existingProgress.querySelector('.text-emerald-600');
-                        if (newInfoSpan) newInfoSpan.innerText = res.nextTierInfo;
-                        var countSpan = existingProgress.querySelectorAll('.text-emerald-600')[1];
-                        if (countSpan) countSpan.innerText = '✅ ' + res.studentsCount + ' طالب مسجل';
+                        if (fill) {
+                            fill.style.width = progressPercent + '%';
+                            fill.style.background = 'linear-gradient(90deg, #86efac, ' + barColor + ')';
+                        }
+                        var infoSpan = existingProgress.querySelector('.text-emerald-600');
+                        if (infoSpan && infoSpan.innerText.includes('المتبقي')) {
+                            var newInfoSpan = existingProgress.querySelector('.text-emerald-600');
+                            if (newInfoSpan) newInfoSpan.innerText = res.nextTierInfo;
+                        }
+                        var countSpan = existingProgress.querySelector('.text-emerald-600');
+                        if (countSpan && countSpan.innerText.includes('طالب مسجل')) {
+                            countSpan.innerText = '✅ ' + res.studentsCount + ' طالب مسجل';
+                        }
                     }
                 }
             } else {
                 var existingProgress = document.getElementById('marketer-progress-bar');
-                if (existingProgress) existingProgress.remove();
+                if (existingProgress) {
+                    existingProgress.remove();
+                }
             }
         }
     } catch(e) {
