@@ -22,7 +22,6 @@ async function callAPI(action, data = {}) {
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
             redirect: 'follow', 
-            keepalive: true,
             headers: {
                 'Content-Type': 'text/plain;charset=utf-8',
             },
@@ -240,15 +239,23 @@ async function uploadReceipt(base64Data, fileName) {
 // دوال تتبع الزوار (محدثة لمنع التكرار والزيارات الوهمية)
 // ==========================================
 function getStableVisitorId() {
-    // نستخدم التخزين الدائم للحفاظ على هوية الزائر حتى لو أغلق المتصفح
-    var sessionId = localStorage.getItem('visitor_session');
-    if (!sessionId) {
-        sessionId = 'زائر-' + Math.floor(10000 + Math.random() * 90000); // توليد رقم خماسي لتجنب التكرار
-        localStorage.setItem('visitor_session', sessionId);
+    var sessionId = 'زائر-' + Math.floor(10000 + Math.random() * 90000); // توليد رقم افتراضي
+    
+    try {
+        // نحاول استخدام التخزين الدائم
+        var storedId = localStorage.getItem('visitor_session');
+        if (storedId) {
+            sessionId = storedId;
+        } else {
+            localStorage.setItem('visitor_session', sessionId);
+        }
+    } catch (e) {
+        // حماية الكود من الانهيار إذا كان الطالب يستخدم وضع التخفي في كروم
+        console.warn("وضع التخفي مفعل: تم استخدام معرف مؤقت للزائر.");
     }
+    
     return sessionId;
 }
-
 function logVisitorActivity(pageName) {
     // 1. إيقاف الرادار تماماً إذا كان المستخدم مسجل دخول أو تم تمييز جهازه كجهاز إدارة
     if (sessionStorage.getItem('loggedIn') === 'true' || localStorage.getItem('is_team_member') === 'true') {
