@@ -227,27 +227,35 @@ async function uploadReceipt(base64Data, fileName) {
     return await callAPI('uploadReceipt', { base64Data, fileName });
 }
 // ==========================================
-// دوال تتبع الزوار (محدثة لمنع التكرار)
+// دوال تتبع الزوار (محدثة لمنع التكرار والزيارات الوهمية)
 // ==========================================
-function logVisitorActivity(pageName, sessionId) {
-    // 1. إيقاف الرادار تماماً إذا كان المستخدم مسجل دخول (مدير/مسوق)
-    if (sessionStorage.getItem('loggedIn') === 'true') {
+function getStableVisitorId() {
+    // نستخدم التخزين الدائم للحفاظ على هوية الزائر حتى لو أغلق المتصفح
+    var sessionId = localStorage.getItem('visitor_session');
+    if (!sessionId) {
+        sessionId = 'زائر-' + Math.floor(10000 + Math.random() * 90000); // توليد رقم خماسي لتجنب التكرار
+        localStorage.setItem('visitor_session', sessionId);
+    }
+    return sessionId;
+}
+
+function logVisitorActivity(pageName) {
+    // 1. إيقاف الرادار تماماً إذا كان المستخدم مسجل دخول أو تم تمييز جهازه كجهاز إدارة
+    if (sessionStorage.getItem('loggedIn') === 'true' || localStorage.getItem('is_team_member') === 'true') {
         return; 
     }
 
-    // 2. منع تكرار نفس الصفحة لنفس الزائر في نفس الجلسة
+    // 2. جلب المعرف الثابت للزائر
+    var sessionId = getStableVisitorId();
+
+    // 3. منع تكرار نفس الصفحة لنفس الزائر في نفس الجلسة النشطة
     var cacheKey = 'visited_' + pageName.trim();
     if (sessionStorage.getItem(cacheKey)) {
         return; 
     }
 
-    // 3. حفظ الصفحة في الذاكرة المؤقتة للزائر وإرسالها لجوجل شيت مرة واحدة
     sessionStorage.setItem(cacheKey, 'true');
-    callAPI('logVisit', { pageName, sessionId }).catch(e => console.log(e));
-}
-
-async function fetchVisitorLogs() {
-    return await callAPI('fetchVisitorLogs');
+    callAPI('logVisit', { pageName: pageName, sessionId: sessionId }).catch(e => console.log(e));
 }
 // ==========================================
 // 13. دوال لوحة المسوق الجديدة وسجل السحوبات
