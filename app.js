@@ -137,8 +137,8 @@ function navigateTo(pageId) {
     if(document.getElementById('btn-' + pageId)) document.getElementById('btn-' + pageId).classList.add('nav-active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // 💡 3. كود تتبع تحركات الزائر (تمت إضافته هنا بنجاح)
-   var pageTitles = {
+    // 💡 3. كود تتبع تحركات الزائر
+    var pageTitles = {
         'home': 'الرئيسية', 'courses': 'الدورات التدريبية', 'b2b': 'خدمات الشركات',
         'news': 'الأخبار', 'verification': 'فحص الشهادات', 'contact': 'تواصل معنا',
         'register': 'استمارة التسجيل', 'payment': 'بوابة الدفع'
@@ -148,7 +148,7 @@ function navigateTo(pageId) {
     if(typeof logVisitorActivity === 'function') {
         logVisitorActivity(pageName);
     }
-
+} 
 // ==========================================
 // دوال عرض الإعلانات
 // ==========================================
@@ -515,7 +515,8 @@ function handleContactSubmit(e) {
 // ==========================================
 // دوال التواصل وطلب عروض الشركات (B2B)
 // ==========================================
-if (typeof logVisitorActivity === 'function') {
+function requestB2BQuote(offerName, offerType) { // <--- هذا السطر كان ممسوحاً بالخطأ
+    if (typeof logVisitorActivity === 'function') {
         logVisitorActivity('خدمات الشركات (طلب تواصل)');
     }
 
