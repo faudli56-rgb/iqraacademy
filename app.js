@@ -68,13 +68,8 @@ function initializeWebsiteLayout() {
     loadPaymentMethods();
     
     // 💡 الإصلاح: تسجيل الزيارة فور فتح الموقع
-    var sessionId = sessionStorage.getItem('visitor_session');
-    if (!sessionId) {
-        sessionId = 'زائر-' + Math.floor(Math.random() * 9999);
-        sessionStorage.setItem('visitor_session', sessionId);
-    }
-    if (typeof logVisitorActivity === 'function') {
-        logVisitorActivity('الرئيسية (دخول مبدئي)', sessionId);
+  if (typeof logVisitorActivity === 'function') {
+        logVisitorActivity('الرئيسية (دخول مبدئي)');
     }
     
     if (!localStorage.getItem('welcome_popup_shown')) {
@@ -143,24 +138,16 @@ function navigateTo(pageId) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // 💡 3. كود تتبع تحركات الزائر (تمت إضافته هنا بنجاح)
-    var sessionId = sessionStorage.getItem('visitor_session');
-    if (!sessionId) {
-        sessionId = 'زائر-' + Math.floor(Math.random() * 9999);
-        sessionStorage.setItem('visitor_session', sessionId);
-    }
-    
-    var pageTitles = {
+   var pageTitles = {
         'home': 'الرئيسية', 'courses': 'الدورات التدريبية', 'b2b': 'خدمات الشركات',
         'news': 'الأخبار', 'verification': 'فحص الشهادات', 'contact': 'تواصل معنا',
         'register': 'استمارة التسجيل', 'payment': 'بوابة الدفع'
     };
     var pageName = pageTitles[pageId] || pageId;
     
-    // إرسال البيانات للسيرفر في الخلفية
     if(typeof logVisitorActivity === 'function') {
-        logVisitorActivity(pageName, sessionId);
+        logVisitorActivity(pageName);
     }
-}
 
 // ==========================================
 // دوال عرض الإعلانات
@@ -528,17 +515,9 @@ function handleContactSubmit(e) {
 // ==========================================
 // دوال التواصل وطلب عروض الشركات (B2B)
 // ==========================================
-function requestB2BQuote(offerName, offerType) {
-    // 💡 إضافة كود التتبع: لتسجيل ضغطة الزائر في رادار وإحصائيات المدير
-    var sessionId = sessionStorage.getItem('visitor_session');
-    if (!sessionId) {
-        sessionId = 'زائر-' + Math.floor(Math.random() * 9999);
-        sessionStorage.setItem('visitor_session', sessionId);
+if (typeof logVisitorActivity === 'function') {
+        logVisitorActivity('خدمات الشركات (طلب تواصل)');
     }
-    if (typeof logVisitorActivity === 'function') {
-        logVisitorActivity('خدمات الشركات (طلب تواصل)', sessionId);
-    }
-    // --------------------------------------------------------
 
     try {
         var message = "";
@@ -633,6 +612,7 @@ async function handleLoginSubmit(e) {
         
         if(res.success) {
             sessionStorage.setItem('loggedIn', 'true');
+            localStorage.setItem('is_team_member', 'true');
             sessionStorage.setItem('role', res.role);
             sessionStorage.setItem('code', res.marketerCode);
             sessionStorage.setItem('name', res.name);
