@@ -72,16 +72,20 @@ function initializeWebsiteLayout() {
         logVisitorActivity('الرئيسية (دخول مبدئي)');
     }
     
-    if (!localStorage.getItem('welcome_popup_shown')) {
-        setTimeout(function() { 
-            var welcomePopup = document.getElementById('welcome-popup');
-            if(welcomePopup) {
-                welcomePopup.classList.remove('hidden');
-                localStorage.setItem('welcome_popup_shown', 'true');
-            }
-        }, 6000);
+   // 💡 تعديل الجوال: حماية النافذة الترحيبية من التسبب في توقف الموقع
+    try {
+        if (!localStorage.getItem('welcome_popup_shown')) {
+            setTimeout(function() { 
+                var welcomePopup = document.getElementById('welcome-popup');
+                if(welcomePopup) {
+                    welcomePopup.classList.remove('hidden');
+                    try { localStorage.setItem('welcome_popup_shown', 'true'); } catch(e){}
+                }
+            }, 6000);
+        }
+    } catch(e) {
+        // تجاهل ظهور النافذة في حالة الحظر لضمان استمرار عمل الموقع
     }
-}
 function toggleMobileMenu() {
     var menu = document.getElementById('mobile-menu');
     var icon = document.getElementById('menu-toggle-icon');
