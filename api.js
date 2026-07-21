@@ -14,9 +14,11 @@ const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbx51syLRrRu0JrDhhg
 // ==========================================
 // الدالة الأساسية للاتصال بالـ API
 // ==========================================
-
 async function callAPI(action, data = {}) {
     try {
+        // جلب المفتاح السري من المتصفح (سيكون فارغاً للزوار)
+        const token = sessionStorage.getItem('authToken'); 
+        
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
             redirect: 'follow', 
@@ -24,20 +26,35 @@ async function callAPI(action, data = {}) {
             headers: {
                 'Content-Type': 'text/plain;charset=utf-8',
             },
-            body: JSON.stringify({ action, data })
+            // إرسال المفتاح مع كل طلب
+            body: JSON.stringify({ action: action, data: data, token: token })
         });
         
-        // استلام الرد كنص أولاً لمنع أخطاء الترجمة
         const text = await response.text();
         try {
-            return JSON.parse(text);
+            const json = JSON.parse(text);
+            
+            // 🚨 الجدار الناري: إذا رفض السيرفر المفتاح (محاولة اختراق أو انتهاء الجلسة)
+            if (json.error === 'AUTH_FAILED') {
+                console.warn("تم صد محاولة دخول غير مصرحة");
+                sessionStorage.clear();
+                localStorage.removeItem('is_team_member');
+                alert("عذراً، جلسة الإدارة غير صالحة أو منتهية. سيتم طردك للصفحة الرئيسية.");
+                window.location.reload();
+                return { success: false };
+            }
+            
+            return json;
         } catch (e) {
             console.error('API Parse Error:', text);
-            return { 
-                success: false, 
-                message: 'استجابة غير صالحة من السيرفر. قد يحتاج سكريبت جوجل إلى تجديد الصلاحيات.' 
-            };
+            return { success: false, message: 'استجابة غير صالحة من السيرفر.' };
         }
+        
+    } catch (error) {
+        console.error('API Error:', error);
+        return { success: false, message: error.message || 'فشل الاتصال بالخادم' };
+    }
+}
         
     } catch (error) {
         console.error('API Error:', error);
