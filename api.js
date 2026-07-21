@@ -12,7 +12,7 @@
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbx51syLRrRu0JrDhhgaySviP0hOp0yOhe-ymywoVb_nF2O2Gt2B-2AclzzL6fjRUzTu/exec';
 
 // ==========================================
-// الدالة الأساسية للاتصال بالـ API
+// الدالة الأساسية للاتصال بالـ API (مع الجدار الناري)
 // ==========================================
 async function callAPI(action, data = {}) {
     try {
@@ -44,6 +44,24 @@ async function callAPI(action, data = {}) {
                 return { success: false };
             }
             
+            return json;
+        } catch (e) {
+            console.error('API Parse Error:', text);
+            return { success: false, message: 'استجابة غير صالحة من السيرفر.' };
+        }
+        
+    } catch (error) {
+        console.error('API Error:', error);
+        return { success: false, message: error.message || 'فشل الاتصال بالخادم' };
+    }
+}
+
+// ==========================================
+// 1. دوال المصادقة (هذه الدالة التي انحذفت بالخطأ)
+// ==========================================
+async function authenticateUser(username, password) {
+    return await callAPI('authenticateUser', { username, password });
+}            
             return json;
         } catch (e) {
             console.error('API Parse Error:', text);
