@@ -774,10 +774,14 @@ async function loadDashboardData(role, code, name) {
                     <button onclick="changeStudentStateUI('${row.orderID}', 'لم يتم تسديد الشهادة')" class="bg-gray-500 text-white px-2 py-1 rounded text-xs hover:bg-gray-600 m-1 shadow-sm">لم يسدد</button>
                 `;
             } 
-            else if (currentStatus === 'تم تسديد الشهادة') {
-                statusBadge = `<span class="text-[#D4A017] font-bold bg-yellow-50 px-2 py-1 rounded">تم تسديد الشهادة</span>`;
-                actionButtons = `<span class="text-xs text-gray-400 font-bold">مكتمل ✔️</span>`;
-            } 
+           else if (currentStatus === 'تم تسديد الشهادة') {
+    statusBadge = `<span class="text-[#D4A017] font-bold bg-yellow-50 px-2 py-1 rounded">تم تسديد الشهادة</span>`;
+    actionButtons = `
+        <button onclick="handleIssueCertificate('${row.orderID}', this)" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-blue-700 m-1 shadow-sm transition-all font-bold">
+            <i class="fas fa-award"></i> إصدار الشهادة
+        </button>
+    `;
+}
             else if (currentStatus === 'لم يتم تسديد الشهادة') {
                 statusBadge = `<span class="text-gray-600 bg-gray-100 px-2 py-1 rounded">لم يسدد</span>`;
                 actionButtons = `
