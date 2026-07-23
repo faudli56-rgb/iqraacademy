@@ -68,11 +68,11 @@ function initializeWebsiteLayout() {
     loadPaymentMethods();
     
     // 💡 الإصلاح: تسجيل الزيارة فور فتح الموقع
-  if (typeof logVisitorActivity === 'function') {
+    if (typeof logVisitorActivity === 'function') {
         logVisitorActivity('الرئيسية (دخول مبدئي)');
     }
     
-   // 💡 تعديل الجوال: حماية النافذة الترحيبية من التسبب في توقف الموقع
+    // 💡 تعديل الجوال: حماية النافذة الترحيبية من التسبب في توقف الموقع
     try {
         if (!localStorage.getItem('welcome_popup_shown')) {
             setTimeout(function() { 
@@ -83,27 +83,27 @@ function initializeWebsiteLayout() {
                 }
             }, 6000);
         }
-        / 💡 الكود الجديد: التحقق مما إذا كان الزائر قادماً من الباركود
-    var urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('portal') === 'certificate') {
-        // 1. الانتقال فوراً لقسم فحص الشهادات
-        navigateTo('verification');
         
-        // 2. إخفاء القائمة العلوية والفوتر لتبدو كبوابة منفصلة تماماً
-        var header = document.querySelector('header');
-        var footer = document.querySelector('footer');
-        if (header) header.style.display = 'none';
-        if (footer) footer.style.display = 'none';
-        
-        // 3. منع ظهور نافذة الترحيب المنبثقة
-        var welcomePopup = document.getElementById('welcome-popup');
-        if (welcomePopup) welcomePopup.remove();
-    }
-}
+        // 💡 الكود الجديد: التحقق مما إذا كان الزائر قادماً من الباركود
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('portal') === 'certificate') {
+            // 1. الانتقال فوراً لقسم فحص الشهادات
+            navigateTo('verification');
+            
+            // 2. إخفاء القائمة العلوية والفوتر لتبدو كبوابة منفصلة تماماً
+            var header = document.querySelector('header');
+            var footer = document.querySelector('footer');
+            if (header) header.style.display = 'none';
+            if (footer) footer.style.display = 'none';
+            
+            // 3. منع ظهور نافذة الترحيب المنبثقة
+            var welcomePopup = document.getElementById('welcome-popup');
+            if (welcomePopup) welcomePopup.remove();
+        }
     } catch(e) {
         // تجاهل ظهور النافذة في حالة الحظر لضمان استمرار عمل الموقع
     }
-    }
+}
 function toggleMobileMenu() {
     var menu = document.getElementById('mobile-menu');
     var icon = document.getElementById('menu-toggle-icon');
