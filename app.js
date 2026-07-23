@@ -110,6 +110,27 @@ function initializeWebsiteLayout() {
         // تجاهل الأخطاء لضمان استمرار عمل الموقع
     }
 }
+// ==========================================
+// دالة استعادة شكل الموقع الطبيعي للزوار القادمين من الباركود
+// ==========================================
+window.restoreWebsiteView = function() {
+    // 1. إظهار الهيدر والفوتر من جديد
+    var header = document.querySelector('header');
+    var footer = document.querySelector('footer');
+    if (header) header.style.display = ''; 
+    if (footer) footer.style.display = '';
+    
+    // 2. إخفاء زر العودة بعد الضغط عليه
+    var backBtn = document.getElementById('return-to-site-btn');
+    if (backBtn) backBtn.style.display = 'none';
+
+    // 3. توجيه الزائر للصفحة الرئيسية للموقع
+    navigateTo('home');
+    
+    // 4. إزالة كلمة portal=certificate من الرابط أعلى المتصفح حتى لا يعود للإخفاء إذا قام بتحديث الصفحة
+    var newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+    window.history.pushState({path:newUrl}, '', newUrl);
+};
 function toggleMobileMenu() {
     var menu = document.getElementById('mobile-menu');
     var icon = document.getElementById('menu-toggle-icon');
