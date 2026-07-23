@@ -67,12 +67,11 @@ function initializeWebsiteLayout() {
     loadRealAdsFromServer();
     loadPaymentMethods();
     
-    // 💡 الإصلاح: تسجيل الزيارة فور فتح الموقع
+    // 💡 تسجيل الزيارة فور فتح الموقع
     if (typeof logVisitorActivity === 'function') {
         logVisitorActivity('الرئيسية (دخول مبدئي)');
     }
     
-    // 💡 تعديل الجوال: حماية النافذة الترحيبية من التسبب في توقف الموقع
     try {
         if (!localStorage.getItem('welcome_popup_shown')) {
             setTimeout(function() { 
@@ -84,7 +83,7 @@ function initializeWebsiteLayout() {
             }, 6000);
         }
         
-        // 💡 الكود الجديد: التحقق مما إذا كان الزائر قادماً من الباركود
+        // 💡 التحقق مما إذا كان الزائر قادماً من الباركود
         var urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('portal') === 'certificate') {
             // 1. الانتقال فوراً لقسم فحص الشهادات
@@ -99,9 +98,16 @@ function initializeWebsiteLayout() {
             // 3. منع ظهور نافذة الترحيب المنبثقة
             var welcomePopup = document.getElementById('welcome-popup');
             if (welcomePopup) welcomePopup.remove();
+
+            // 4. إضافة زر "تصفح الموقع" أسفل مربع فحص الشهادات
+            var certContainer = document.querySelector('#page-verification .max-w-xl');
+            if (certContainer && !document.getElementById('return-to-site-btn')) {
+                var btnHTML = '<button id="return-to-site-btn" onclick="restoreWebsiteView()" class="w-full mt-4 bg-slate-50 hover:bg-slate-100 text-[#0B1F4D] font-bold py-3.5 rounded-xl transition shadow-sm border border-slate-200 cursor-pointer flex justify-center items-center gap-2"><i class="fas fa-home text-lg"></i> الدخول وتصفح موقع الأكاديمية</button>';
+                certContainer.insertAdjacentHTML('beforeend', btnHTML);
+            }
         }
     } catch(e) {
-        // تجاهل ظهور النافذة في حالة الحظر لضمان استمرار عمل الموقع
+        // تجاهل الأخطاء لضمان استمرار عمل الموقع
     }
 }
 function toggleMobileMenu() {
