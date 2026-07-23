@@ -83,6 +83,23 @@ function initializeWebsiteLayout() {
                 }
             }, 6000);
         }
+        / 💡 الكود الجديد: التحقق مما إذا كان الزائر قادماً من الباركود
+    var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('portal') === 'certificate') {
+        // 1. الانتقال فوراً لقسم فحص الشهادات
+        navigateTo('verification');
+        
+        // 2. إخفاء القائمة العلوية والفوتر لتبدو كبوابة منفصلة تماماً
+        var header = document.querySelector('header');
+        var footer = document.querySelector('footer');
+        if (header) header.style.display = 'none';
+        if (footer) footer.style.display = 'none';
+        
+        // 3. منع ظهور نافذة الترحيب المنبثقة
+        var welcomePopup = document.getElementById('welcome-popup');
+        if (welcomePopup) welcomePopup.remove();
+    }
+}
     } catch(e) {
         // تجاهل ظهور النافذة في حالة الحظر لضمان استمرار عمل الموقع
     }
