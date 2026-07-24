@@ -54,7 +54,6 @@ function escapeHTML(str) {
 // ==========================================
 // دوال التهيئة والتنقل
 // ==========================================
-
 function initializeWebsiteLayout() {
     try { 
         totalViews += 1;
@@ -83,8 +82,15 @@ function initializeWebsiteLayout() {
             }, 6000);
         }
         
-        // 💡 التحقق مما إذا كان الزائر قادماً من الباركود
         var urlParams = new URLSearchParams(window.location.search);
+        
+        // 💡 [التعديل الجديد]: التقاط كود المسوق من الرابط وحفظه في المتصفح
+        var refCode = urlParams.get('ref');
+        if (refCode) {
+            localStorage.setItem('marketerRef', refCode);
+        }
+
+        // 💡 التحقق مما إذا كان الزائر قادماً من الباركود
         if (urlParams.get('portal') === 'certificate') {
             // 1. الانتقال فوراً لقسم فحص الشهادات
             navigateTo('verification');
