@@ -84,16 +84,18 @@ function initializeWebsiteLayout() {
         
         var urlParams = new URLSearchParams(window.location.search);
         
-        // 💡 [التعديل الجديد]: التقاط كود المسوق من الرابط وحفظه في المتصفح
+      // 💡 [التعديل الجديد]: التقاط كود المسوق من الرابط وحفظه في المتصفح
         var refCode = urlParams.get('ref');
         if (refCode) {
             localStorage.setItem('marketerRef', refCode);
         }
+        
         // 💡 التقاط رابط الدورة المباشر وتوجيه الطالب وإخفاء الواجهة
-       if (directCourse) {
-    directCourse = directCourse.replace(/_/g, ' '); 
-}
+        var directCourse = urlParams.get('course') || urlParams.get('c');
         if (directCourse) {
+            // إعادة الشرطة السفلية إلى مسافات ليتعرف عليها النظام ويطابق الدورة
+            directCourse = directCourse.replace(/_/g, ' ');
+
             var header = document.querySelector('header');
             var footer = document.querySelector('footer');
             if (header) header.style.display = 'none';
@@ -102,6 +104,7 @@ function initializeWebsiteLayout() {
             var welcomePopup = document.getElementById('welcome-popup');
             if (welcomePopup) welcomePopup.remove();
 
+            // تمرير اسم الدورة الصحيح وتوجيه الطالب لاستمارة التسجيل مباشرة
             window.pendingDirectCourse = directCourse;
             navigateTo('register');
 
