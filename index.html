@@ -592,10 +592,16 @@
 
                     </div>
                 </div>
-                <!-- تبويب الدورة -->
+               <!-- تبويب الدورة -->
                 <div id="mk-course-tab" class="mk-content-section hidden">
-                    <div class="bg-[#0B1F4D] text-white p-5 rounded-2xl mb-6 flex justify-between items-center shadow-md">
+                    <div class="bg-[#0B1F4D] text-white p-5 rounded-2xl mb-6 shadow-md space-y-3">
                         <h3 class="font-black text-sm lg:text-lg" id="mk-course-title">اختر دورة</h3>
+                        <!-- 💡 صندوق رابط التسجيل المباشر للدورة للمسوق -->
+                        <div id="mk-course-direct-link-box" class="bg-white/10 p-3 rounded-xl border border-white/20 flex flex-col sm:flex-row gap-2 items-center">
+                            <span class="text-xs font-bold text-[#D4A017] whitespace-nowrap"><i class="fas fa-link ml-1"></i> رابط التسويق المباشر لهذه الدورة:</span>
+                            <input type="text" id="mk-course-link-input" readonly class="w-full px-3 py-2 rounded-lg bg-white/20 text-white dir-ltr text-left text-xs font-mono border-0 focus:outline-none">
+                            <button type="button" onclick="copyMarketerCourseLink()" id="btn-copy-course-link" class="bg-[#D4A017] hover:bg-[#b88614] text-[#0B1F4D] px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition cursor-pointer shadow-md"><i class="fas fa-copy ml-1"></i> نسخ الرابط</button>
+                        </div>
                     </div>
                     
                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
