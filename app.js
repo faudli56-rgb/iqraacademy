@@ -89,6 +89,27 @@ function initializeWebsiteLayout() {
         if (refCode) {
             localStorage.setItem('marketerRef', refCode);
         }
+        // 💡 التقاط رابط الدورة المباشر وتوجيه الطالب وإخفاء الواجهة
+        var directCourse = urlParams.get('course') || urlParams.get('c');
+        if (directCourse) {
+            var header = document.querySelector('header');
+            var footer = document.querySelector('footer');
+            if (header) header.style.display = 'none';
+            if (footer) footer.style.display = 'none';
+            
+            var welcomePopup = document.getElementById('welcome-popup');
+            if (welcomePopup) welcomePopup.remove();
+
+            window.pendingDirectCourse = directCourse;
+            navigateTo('register');
+
+            // إضافة زر العودة لتصفح الموقع بعد نجاح التسجيل
+            var successDiv = document.getElementById('successMessage');
+            if (successDiv && !document.getElementById('direct-browse-site-btn')) {
+                var browseBtnHTML = '<button type="button" id="direct-browse-site-btn" onclick="restoreWebsiteView()" class="w-full bg-[#0B1F4D] hover:bg-[#132F6B] text-white font-bold py-3 rounded-xl inline-flex items-center justify-center gap-2 shadow-md transition mt-3 cursor-pointer text-sm"><i class="fas fa-globe text-lg text-[#D4A017]"></i> تصفح موقع الأكاديمية الكامل</button>';
+                successDiv.insertAdjacentHTML('beforeend', browseBtnHTML);
+            }
+        }
 
         // 💡 التحقق مما إذا كان الزائر قادماً من الباركود
         if (urlParams.get('portal') === 'certificate') {
@@ -427,10 +448,26 @@ function filterCourses(category) {
 function updateRegistrationDropdown(courses) {
     var selectBox = document.getElementById('reg-course'); 
     if(!selectBox) return;
+    var currentVal = selectBox.value;
     selectBox.innerHTML = '<option value="">-- انقر هنا لتحديد المسار التدريبي --</option>';
     courses.forEach(function(c) { 
         selectBox.insertAdjacentHTML('beforeend', `<option value="${c.title}">${c.title}</option>`); 
     });
+
+    // التحديد التلقائي إذا جاء الطالب من رابط مباشر
+    if (window.pendingDirectCourse) {
+        var searchName = window.pendingDirectCourse.trim().toLowerCase();
+        for (var i = 0; i < selectBox.options.length; i++) {
+            var optVal = selectBox.options[i].value.trim().toLowerCase();
+            if (optVal === searchName || optVal.includes(searchName) || searchName.includes(optVal)) {
+                selectBox.selectedIndex = i;
+                break;
+            }
+        }
+        showSelectedCourseDetails();
+    } else if (currentVal) {
+        selectBox.value = currentVal;
+    }
 }
 
 function selectCourseDirectly(courseTitle) { 
@@ -2452,6 +2489,20 @@ function loadSpecificCourseData(courseName) {
     
     switchMarketerTab('course');
     document.getElementById('mk-course-title').innerText = courseName;
+
+    // ======================================================
+    // 💡 التعديل الجديد: توليد رابط التسجيل المباشر لهذه الدورة بالذات
+    // ======================================================
+    var siteUrl = typeof SCRIPT_URL !== 'undefined' ? SCRIPT_URL : window.location.href.split('?')[0];
+    var marketerCode = sessionStorage.getItem('code') || '';
+    var courseDirectUrl = siteUrl + "?course=" + encodeURIComponent(courseName) + "&ref=" + marketerCode;
+    
+    var courseLinkInput = document.getElementById('mk-course-link-input');
+    if (courseLinkInput) {
+        courseLinkInput.value = courseDirectUrl;
+    }
+    // ======================================================
+
     document.getElementById('mk-c-enrolled').innerText = courseData.enrolled;
     document.getElementById('mk-c-paid').innerText = courseData.paid;
     document.getElementById('mk-c-earnings').innerText = courseData.totalEarnings + ' ر.ي';
@@ -2517,73 +2568,20 @@ function loadSpecificCourseData(courseName) {
     });
     if (window.FontAwesome) { window.FontAwesome.dom.i2svg(); }
 }
-async function requestWithdrawal() {
-    // تنظيف النص من رمز العملة لاستخراج الرقم الصافي
-    let availableText = document.getElementById('mk-available-balance').innerText.replace('ر.ي', '').trim();
-    let available = parseFloat(availableText);
-    
-    if (isNaN(available) || available <= 0) {
-        alert("عفواً، لا يوجد رصيد متاح للسحب حالياً.");
-        return;
-    }
 
-    let amountStr = prompt(`رصيدك المتاح للسحب هو ${available} ر.ي\nأدخل المبلغ الذي ترغب بسحبه الآن:`);
-    if (!amountStr) return; 
-
-    let amount = parseFloat(amountStr);
-    if (isNaN(amount) || amount <= 0 || amount > available) {
-        alert("المبلغ المدخل غير صحيح أو يتجاوز الرصيد المتاح.");
-        return;
-    }
-
-    document.body.style.cursor = 'wait';
-    let res = await requestWithdrawalAction(sessionStorage.getItem('code'), amount);
-    document.body.style.cursor = 'default';
-
-    if (res.success) {
-        alert("✅ تم إرسال طلب السحب بنجاح! سيتم مراجعته قريباً.");
-        loadMarketerDashboard(); 
-        switchMarketerTab('withdrawals');
-    } else {
-        alert("❌ حدث خطأ: " + res.error);
-    }
-}
-async function loadWithdrawalsHistory() {
-    let tbody = document.getElementById('mk-withdrawals-body');
-    tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">جاري التحميل...</td></tr>';
-    
-    let res = await fetchWithdrawalsHistory(sessionStorage.getItem('code'));
-    
-    if (res.success) {
-        tbody.innerHTML = '';
-        let totalWithdrawn = 0;
-
-        if (res.data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400 font-bold">لا توجد عمليات سحب مسجلة حتى الآن.</td></tr>';
-            document.getElementById('mk-total-withdrawn').innerText = '0 ر.ي';
-            return;
-        }
-
-        res.data.forEach(w => {
-            if (w.status === 'مكتمل') totalWithdrawn += parseFloat(w.amount);
-            
-            let statusBadge = '';
-            if (w.status === 'قيد المراجعة') statusBadge = '<span class="bg-amber-50 text-amber-600 border border-amber-200 px-2 py-1 rounded font-bold">قيد المراجعة</span>';
-            else if (w.status === 'مكتمل') statusBadge = '<span class="bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-1 rounded font-bold">مكتمل</span>';
-            else statusBadge = '<span class="bg-rose-50 text-rose-600 border border-rose-200 px-2 py-1 rounded font-bold">مرفوض</span>';
-
-            tbody.innerHTML += `
-                <tr class="hover:bg-slate-50 transition border-b border-slate-50">
-                    <td class="p-4 font-bold text-[#0B1F4D] text-[11px]">${w.id}</td>
-                    <td class="p-4 text-slate-500 font-medium text-[10px]">${w.date}</td>
-                    <td class="p-4 font-black text-emerald-600 text-sm">${w.amount} ر.ي</td>
-                    <td class="p-4">${statusBadge}</td>
-                    <td class="p-4 text-slate-400 text-[10px] truncate max-w-[150px]">${w.notes || '-'}</td>
-                </tr>
-            `;
-        });
-
-        document.getElementById('mk-total-withdrawn').innerText = totalWithdrawn + ' ر.ي';
-        if (window.FontAwesome) { window.FontAwesome.dom.i2svg(); }
+// ==========================================
+// 💡 الدالة الجديدة الخاصة بنسخ رابط الدورة المباشر
+// ==========================================
+function copyMarketerCourseLink() {
+    var copyText = document.getElementById("mk-course-link-input");
+    if (!copyText || !copyText.value) return;
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    document.execCommand("copy");
+    var btn = document.getElementById("btn-copy-course-link");
+    if (btn) {
+        var origHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> تم النسخ!';
+        setTimeout(function() { btn.innerHTML = origHTML; }, 3000);
     }
 }
