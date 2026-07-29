@@ -90,7 +90,9 @@ function initializeWebsiteLayout() {
             localStorage.setItem('marketerRef', refCode);
         }
         // 💡 التقاط رابط الدورة المباشر وتوجيه الطالب وإخفاء الواجهة
-        var directCourse = urlParams.get('course') || urlParams.get('c');
+       if (directCourse) {
+    directCourse = directCourse.replace(/_/g, ' '); 
+}
         if (directCourse) {
             var header = document.querySelector('header');
             var footer = document.querySelector('footer');
@@ -2432,7 +2434,26 @@ function copyMarketerLinkNew() {
         btn.classList.replace('bg-emerald-800', 'bg-emerald-600');
     }, 3000);
 }
-
+function copyMarketerCourseLink() {
+    var copyText = document.getElementById("mk-course-link-input");
+    if (!copyText) return;
+    
+    copyText.select();
+    document.execCommand("copy");
+    
+    var btn = document.getElementById("btn-copy-course-link");
+    var originalHTML = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-check"></i> تم النسخ!';
+    btn.classList.add('bg-emerald-600', 'text-white');
+    btn.classList.remove('bg-[#D4A017]', 'text-[#0B1F4D]');
+    
+    setTimeout(function() { 
+        btn.innerHTML = originalHTML; 
+        btn.classList.remove('bg-emerald-600', 'text-white');
+        btn.classList.add('bg-[#D4A017]', 'text-[#0B1F4D]');
+    }, 3000);
+}
 function switchMarketerTab(tabId) {
     document.querySelectorAll('.mk-content-section').forEach(el => {
         el.classList.add('hidden');
@@ -2496,8 +2517,8 @@ function loadSpecificCourseData(courseName) {
     var siteUrl = typeof SCRIPT_URL !== 'undefined' ? SCRIPT_URL : window.location.href.split('?')[0];
     var marketerCode = sessionStorage.getItem('code') || '';
     
-    // إزالة التشفير ليبقى الاسم بالعربي تماماً
-    var courseDirectUrl = siteUrl + "?course=" + courseName + "&ref=" + marketerCode;
+   // استبدال جميع المسافات في اسم الدورة بشرطة سفلية للحفاظ على شكل الحروف العربية
+var courseDirectUrl = siteUrl + "?course=" + courseName.replace(/ /g, "_") + "&ref=" + marketerCode;
     
     var courseLinkInput = document.getElementById('mk-course-link-input');
     if (courseLinkInput) {
