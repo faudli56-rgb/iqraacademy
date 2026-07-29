@@ -2491,11 +2491,13 @@ function loadSpecificCourseData(courseName) {
     document.getElementById('mk-course-title').innerText = courseName;
 
     // ======================================================
-    // 💡 التعديل الجديد: توليد رابط التسجيل المباشر لهذه الدورة بالذات
+    // 💡 التعديل الجديد: رابط عربي نظيف ومقروء بدون رموز تشفير
     // ======================================================
     var siteUrl = typeof SCRIPT_URL !== 'undefined' ? SCRIPT_URL : window.location.href.split('?')[0];
     var marketerCode = sessionStorage.getItem('code') || '';
-    var courseDirectUrl = siteUrl + "?course=" + encodeURIComponent(courseName) + "&ref=" + marketerCode;
+    
+    // إزالة التشفير ليبقى الاسم بالعربي تماماً
+    var courseDirectUrl = siteUrl + "?course=" + courseName + "&ref=" + marketerCode;
     
     var courseLinkInput = document.getElementById('mk-course-link-input');
     if (courseLinkInput) {
@@ -2567,21 +2569,4 @@ function loadSpecificCourseData(courseName) {
         `;
     });
     if (window.FontAwesome) { window.FontAwesome.dom.i2svg(); }
-}
-
-// ==========================================
-// 💡 الدالة الجديدة الخاصة بنسخ رابط الدورة المباشر
-// ==========================================
-function copyMarketerCourseLink() {
-    var copyText = document.getElementById("mk-course-link-input");
-    if (!copyText || !copyText.value) return;
-    copyText.select();
-    copyText.setSelectionRange(0, 99999);
-    document.execCommand("copy");
-    var btn = document.getElementById("btn-copy-course-link");
-    if (btn) {
-        var origHTML = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-check"></i> تم النسخ!';
-        setTimeout(function() { btn.innerHTML = origHTML; }, 3000);
-    }
 }
