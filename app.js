@@ -52,7 +52,7 @@ function escapeHTML(str) {
 }
 
 // ==========================================
-// دوال التهيئة والتنقل (نسخة محسنة للسرعة)
+// دوال التهيئة والتنقل (نسخة محسنة للسرعة مع دعم رابط القاعة)
 // ==========================================
 function initializeWebsiteLayout() {
     try { 
@@ -68,14 +68,13 @@ function initializeWebsiteLayout() {
         localStorage.setItem('marketerRef', refCode);
     }
     
-    // 🚀 [التحديث الجديد]: تفعيل وضع "التسجيل السريع" للروابط المباشرة
+    // 🚀 وضع "التسجيل السريع" للروابط المباشرة
     var directCourse = urlParams.get('course') || urlParams.get('c');
     if (directCourse) {
-        // إعادة الشرطة السفلية إلى مسافات
         directCourse = directCourse.replace(/_/g, ' ');
         window.pendingDirectCourse = directCourse;
 
-        // 1. حجب الموقع بالكامل (إخفاء الهيدر والفوتر والنافذة المنبثقة)
+        // 1. حجب الموقع بالكامل
         var header = document.querySelector('header');
         var footer = document.querySelector('footer');
         if (header) header.style.display = 'none';
@@ -84,11 +83,10 @@ function initializeWebsiteLayout() {
         var welcomePopup = document.getElementById('welcome-popup');
         if (welcomePopup) welcomePopup.remove();
 
-        // 2. تعبئة قائمة الدورات فوراً بالدورة المطلوبة فقط (للتسريع بدون انترنت)
+        // 2. تعبئة قائمة الدورات فوراً بالدورة المطلوبة وإقفالها
         var selectBox = document.getElementById('reg-course');
         if (selectBox) {
             selectBox.innerHTML = `<option value="${directCourse}" selected>${directCourse}</option>`;
-            // إقفال القائمة حتى لا يضطر المتدرب لتغييرها
             selectBox.style.pointerEvents = 'none'; 
             selectBox.style.backgroundColor = '#f1f5f9'; 
         }
@@ -103,11 +101,18 @@ function initializeWebsiteLayout() {
             successDiv.insertAdjacentHTML('beforeend', browseBtnHTML);
         }
 
-        // 4. تحميل وسائل الدفع فقط (لأن المتدرب سيحتاجها فور التسجيل)
+        // 4. تحميل وسائل الدفع
         loadPaymentMethods();
 
-        // 5. إيقاف باقي السكربت كلياً لمنع تحميل الأخبار والإعلانات الثقيلة
-        return; 
+        // 💡 [الحل الجذري]: جلب بيانات الدورات في الخلفية بصمت 
+        // لكي يتعرف النظام على "رابط القاعة" عند الضغط على زر التسجيل
+        fetchCoursesFromSheet().then(function(courses) {
+            if (Array.isArray(courses)) {
+                globalCourses = courses; // تخزين البيانات في الذاكرة فقط بدون تجميد الواجهة
+            }
+        }).catch(function(e){});
+
+        return; // إيقاف باقي السكربت كلياً لمنع تحميل الأخبار والإعلانات الثقيلة
     }
 
     // ==========================================
@@ -134,7 +139,6 @@ function initializeWebsiteLayout() {
             }, 6000);
         }
         
-        // التحقق مما إذا كان الزائر قادماً من الباركود (فحص الشهادات)
         if (urlParams.get('portal') === 'certificate') {
             navigateTo('verification');
             var header = document.querySelector('header');
