@@ -475,7 +475,7 @@ function updateRegistrationDropdown(courses) {
     }
 }
 
-ffunction selectCourseDirectly(courseTitle) { 
+function selectCourseDirectly(courseTitle) { 
     // السطر الجديد لحل مشكلة تعليق الزر
     if (typeof registerAnotherCourse === 'function') {
         registerAnotherCourse(); 
