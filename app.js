@@ -156,7 +156,7 @@ function initializeWebsiteLayout() {
     }
 }
 // ==========================================
-// دالة استعادة شكل الموقع الطبيعي للزوار القادمين من الباركود
+// دالة استعادة شكل الموقع الطبيعي للزوار القادمين من الروابط المباشرة أو الباركود
 // ==========================================
 window.restoreWebsiteView = function() {
     // 1. إظهار الهيدر والفوتر من جديد
@@ -165,14 +165,23 @@ window.restoreWebsiteView = function() {
     if (header) header.style.display = ''; 
     if (footer) footer.style.display = '';
     
-    // 2. إخفاء زر العودة بعد الضغط عليه
+    // 2. إخفاء أزرار العودة بعد الضغط عليها
     var backBtn = document.getElementById('return-to-site-btn');
     if (backBtn) backBtn.style.display = 'none';
+    
+    var directBrowseBtn = document.getElementById('direct-browse-site-btn');
+    if (directBrowseBtn) directBrowseBtn.style.display = 'none';
 
-    // 3. توجيه الزائر للصفحة الرئيسية للموقع
+    // 3. جلب بيانات الموقع التي قمنا بتأجيلها لتسريع التسجيل
+    loadCoursesFromServer();
+    loadNewsFromServer();
+    loadTestimonialsFromServer();
+    loadRealAdsFromServer();
+
+    // 4. توجيه الزائر للصفحة الرئيسية للموقع
     navigateTo('home');
     
-    // 4. إزالة كلمة portal=certificate من الرابط أعلى المتصفح حتى لا يعود للإخفاء إذا قام بتحديث الصفحة
+    // 5. تنظيف الرابط أعلى المتصفح حتى لا يعود لوضع "التسجيل السريع" إذا قام بتحديث الصفحة
     var newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
     window.history.pushState({path:newUrl}, '', newUrl);
 };
