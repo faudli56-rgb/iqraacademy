@@ -1811,7 +1811,7 @@ function renderNewsCards(news) {
         let imgHtml = n.image ? `<img src="${getValidImageUrl(n.image)}" class="w-full h-40 object-cover rounded-xl mb-3" loading="lazy">` : '';
         
         container.insertAdjacentHTML('beforeend', `
-        <div class="bg-white p-5 rounded-2xl shadow border border-slate-100 text-right hover:shadow-lg transition cursor-pointer flex flex-col justify-between" onclick="window.open('https://whatsapp.com/channel/0029VbCDK6M4IBhBR3jvVY0Y', '_blank')">
+        <div class="bg-white p-5 rounded-2xl shadow border border-slate-100 text-right hover:shadow-lg transition cursor-pointer flex flex-col justify-between" onclick="window.open('https://whatsapp.com/channel/0029VbBFt5q4NVirBaGzNF0A', '_blank')">
             <div>
                 ${imgHtml}
                 <div class="flex justify-between items-center mb-2">
