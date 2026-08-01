@@ -437,7 +437,7 @@ function renderCourses(courses) {
                 <span class="font-bold text-[#0B1F4D] truncate w-1/3">${escapeHTML(c.title)}</span>
                 <div class="flex gap-1">
                     <button onclick="openDetailsModal('${escapeHTML(c.title)}', event)" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded shadow-sm transition">التفاصيل</button>
-                    <button onclick="openEditCourseModal('${c.id}', '${c.title.replace(/'/g, "\\'")}', '${c.trainer}', '${c.duration}', '${c.fee}', '${c.category}', '${c.discount || ''}')" class="bg-emerald-600 text-white px-2 py-1 rounded shadow-sm">تعديل</button>
+                    <button onclick="openEditCourseModal('${c.id}', '${c.title.replace(/'/g, "\\'")}', '${c.trainer}', '${c.duration}', '${c.fee}', '${c.category}', '${c.discount || ''}', '${c.link || ''}')" class="bg-emerald-600 text-white px-2 py-1 rounded shadow-sm">تعديل</button>
                     <button onclick="deleteCourse('${c.id}')" class="bg-rose-500 text-white px-2 py-1 rounded shadow-sm">حذف</button>
                 </div>
             </div>`);
@@ -551,6 +551,25 @@ async function handleNewRegistration(e) {
             var successDiv = document.getElementById('successMessage');
             if(successDiv) {
                 successDiv.classList.remove('hidden');
+                // --- استخراج رابط القاعة الخاص بالدورة المحددة ---
+var selectedCourseName = document.getElementById('reg-course').value;
+var courseLink = "";
+for(var c = 0; c < globalCourses.length; c++){
+    if(globalCourses[c].title === selectedCourseName){
+        courseLink = globalCourses[c].link || "";
+        break;
+    }
+}
+
+var trainingBtn = document.getElementById('dynamic-training-link');
+if(trainingBtn) {
+    if(courseLink && courseLink.trim() !== "") {
+        trainingBtn.href = courseLink;
+        trainingBtn.style.display = 'inline-flex'; // إظهار الزر
+    } else {
+        trainingBtn.style.display = 'none'; // إخفاء الزر إذا لم تضف رابطاً للدورة
+    }
+}
                 successDiv.style.display = 'block';
                 if(document.getElementById('displayOrderID')) {
                     // عرض الرقم بالتنسيق الجديد IQR 1001
@@ -1111,6 +1130,7 @@ async function handleAddCourse(e) {
             discount: document.getElementById('adm-course-discount').value, // الحقل الجديد
             category: document.getElementById('adm-course-cat').value,
             duration: document.getElementById('adm-course-duration').value,
+            link: document.getElementById('adm-course-link').value,
             image: base64Img
         };
         
@@ -1190,7 +1210,8 @@ function openEditCourseModal(id, title, trainer, dur, fee, cat, discount) {
     document.getElementById('edit-dur').value = dur;
     document.getElementById('edit-fee').value = fee;
     document.getElementById('edit-cat').value = cat;
-    document.getElementById('edit-discount').value = discount || ''; // الحقل الجديد
+    document.getElementById('edit-discount').value = discount || '';
+    document.getElementById('edit-course-link').value = link || '';
     document.getElementById('edit-course-modal').classList.remove('hidden');
 }
 
@@ -1201,7 +1222,8 @@ async function submitCourseEdit() {
         trainer: document.getElementById('edit-trainer').value,
         duration: document.getElementById('edit-dur').value,
         fee: document.getElementById('edit-fee').value,
-        discount: document.getElementById('edit-discount').value, // الحقل الجديد
+        discount: document.getElementById('edit-discount').value,
+        link: document.getElementById('edit-course-link').value,
         category: document.getElementById('edit-cat').value
     };
     
