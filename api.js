@@ -299,3 +299,30 @@ async function requestWithdrawalAction(code, amount) {
 async function fetchWithdrawalsHistory(code) {
     return await callAPI('fetchWithdrawalsHistory', { code });
 }
+// ==========================================
+// 14. دوال قاعة البث المباشر (المسترجعة)
+// ==========================================
+
+async function recordAttendance(data) {
+    return await callAPI('recordAttendance', data);
+}
+
+async function toggleLiveRoom(status, ytLink) {
+    return await callAPI('toggleLiveRoom', { status: status, ytLink: ytLink });
+}
+
+async function getLiveRoomStatus() {
+    return await callAPI('getLiveRoomStatus');
+}
+
+async function saveChatBatch(messages) {
+    return await callAPI('saveChatBatch', { messages: messages });
+}
+
+async function syncRoomState(lastMsgId) {
+    return await callAPI('syncRoomState', { lastMsgId: lastMsgId });
+}
+
+async function updateRoomSettings(key, value) {
+    return await callAPI('updateRoomSettings', { key: key, value: value });
+}
