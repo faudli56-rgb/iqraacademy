@@ -584,7 +584,7 @@ if(trainingBtn) {
             
            showToast("اتممت عملية التسجيل بنجاح في الأكاديمية!");
             setTimeout(function() { 
-                window.open("https://whatsapp.com/channel/0029VbCDK6M4IBhBR3jvVY0Y", "_blank"); 
+                window.open("https://whatsapp.com/channel/0029VbBFt5q4NVirBaGzNF0A", "_blank"); 
             }, 3000);
         } else {
            showToast("❌ خطأ أثناء التسجيل: " + (res ? res.error : "غير معروف"), true);
