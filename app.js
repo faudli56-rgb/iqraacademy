@@ -52,7 +52,7 @@ function escapeHTML(str) {
 }
 
 // ==========================================
-// دوال التهيئة والتنقل
+// دوال التهيئة والتنقل (نسخة محسنة للسرعة)
 // ==========================================
 function initializeWebsiteLayout() {
     try { 
@@ -60,13 +60,65 @@ function initializeWebsiteLayout() {
         localStorage.setItem('site_views', totalViews); 
     } catch(e) {}
     
+    var urlParams = new URLSearchParams(window.location.search);
+    
+    // التقاط كود المسوق من الرابط وحفظه في المتصفح
+    var refCode = urlParams.get('ref');
+    if (refCode) {
+        localStorage.setItem('marketerRef', refCode);
+    }
+    
+    // 🚀 [التحديث الجديد]: تفعيل وضع "التسجيل السريع" للروابط المباشرة
+    var directCourse = urlParams.get('course') || urlParams.get('c');
+    if (directCourse) {
+        // إعادة الشرطة السفلية إلى مسافات
+        directCourse = directCourse.replace(/_/g, ' ');
+        window.pendingDirectCourse = directCourse;
+
+        // 1. حجب الموقع بالكامل (إخفاء الهيدر والفوتر والنافذة المنبثقة)
+        var header = document.querySelector('header');
+        var footer = document.querySelector('footer');
+        if (header) header.style.display = 'none';
+        if (footer) footer.style.display = 'none';
+        
+        var welcomePopup = document.getElementById('welcome-popup');
+        if (welcomePopup) welcomePopup.remove();
+
+        // 2. تعبئة قائمة الدورات فوراً بالدورة المطلوبة فقط (للتسريع بدون انترنت)
+        var selectBox = document.getElementById('reg-course');
+        if (selectBox) {
+            selectBox.innerHTML = `<option value="${directCourse}" selected>${directCourse}</option>`;
+            // إقفال القائمة حتى لا يضطر المتدرب لتغييرها
+            selectBox.style.pointerEvents = 'none'; 
+            selectBox.style.backgroundColor = '#f1f5f9'; 
+        }
+
+        // 3. توجيه الطالب لاستمارة التسجيل مباشرة
+        navigateTo('register');
+
+        // إضافة زر العودة لتصفح الموقع بعد نجاح التسجيل
+        var successDiv = document.getElementById('successMessage');
+        if (successDiv && !document.getElementById('direct-browse-site-btn')) {
+            var browseBtnHTML = '<button type="button" id="direct-browse-site-btn" onclick="restoreWebsiteView()" class="w-full bg-[#0B1F4D] hover:bg-[#132F6B] text-white font-bold py-3 rounded-xl inline-flex items-center justify-center gap-2 shadow-md transition mt-3 cursor-pointer text-sm"><i class="fas fa-globe text-lg text-[#D4A017]"></i> تصفح موقع الأكاديمية الكامل</button>';
+            successDiv.insertAdjacentHTML('beforeend', browseBtnHTML);
+        }
+
+        // 4. تحميل وسائل الدفع فقط (لأن المتدرب سيحتاجها فور التسجيل)
+        loadPaymentMethods();
+
+        // 5. إيقاف باقي السكربت كلياً لمنع تحميل الأخبار والإعلانات الثقيلة
+        return; 
+    }
+
+    // ==========================================
+    // التشغيل الطبيعي (إذا دخل الزائر للصفحة الرئيسية العادية)
+    // ==========================================
     loadCoursesFromServer();
     loadNewsFromServer();
     loadTestimonialsFromServer();
     loadRealAdsFromServer();
     loadPaymentMethods();
     
-    // 💡 تسجيل الزيارة فور فتح الموقع
     if (typeof logVisitorActivity === 'function') {
         logVisitorActivity('الرئيسية (دخول مبدئي)');
     }
@@ -82,56 +134,17 @@ function initializeWebsiteLayout() {
             }, 6000);
         }
         
-        var urlParams = new URLSearchParams(window.location.search);
-        
-      // 💡 [التعديل الجديد]: التقاط كود المسوق من الرابط وحفظه في المتصفح
-        var refCode = urlParams.get('ref');
-        if (refCode) {
-            localStorage.setItem('marketerRef', refCode);
-        }
-        
-        // 💡 التقاط رابط الدورة المباشر وتوجيه الطالب وإخفاء الواجهة
-        var directCourse = urlParams.get('course') || urlParams.get('c');
-        if (directCourse) {
-            // إعادة الشرطة السفلية إلى مسافات ليتعرف عليها النظام ويطابق الدورة
-            directCourse = directCourse.replace(/_/g, ' ');
-
-            var header = document.querySelector('header');
-            var footer = document.querySelector('footer');
-            if (header) header.style.display = 'none';
-            if (footer) footer.style.display = 'none';
-            
-            var welcomePopup = document.getElementById('welcome-popup');
-            if (welcomePopup) welcomePopup.remove();
-
-            // تمرير اسم الدورة الصحيح وتوجيه الطالب لاستمارة التسجيل مباشرة
-            window.pendingDirectCourse = directCourse;
-            navigateTo('register');
-
-            // إضافة زر العودة لتصفح الموقع بعد نجاح التسجيل
-            var successDiv = document.getElementById('successMessage');
-            if (successDiv && !document.getElementById('direct-browse-site-btn')) {
-                var browseBtnHTML = '<button type="button" id="direct-browse-site-btn" onclick="restoreWebsiteView()" class="w-full bg-[#0B1F4D] hover:bg-[#132F6B] text-white font-bold py-3 rounded-xl inline-flex items-center justify-center gap-2 shadow-md transition mt-3 cursor-pointer text-sm"><i class="fas fa-globe text-lg text-[#D4A017]"></i> تصفح موقع الأكاديمية الكامل</button>';
-                successDiv.insertAdjacentHTML('beforeend', browseBtnHTML);
-            }
-        }
-
-        // 💡 التحقق مما إذا كان الزائر قادماً من الباركود
+        // التحقق مما إذا كان الزائر قادماً من الباركود (فحص الشهادات)
         if (urlParams.get('portal') === 'certificate') {
-            // 1. الانتقال فوراً لقسم فحص الشهادات
             navigateTo('verification');
-            
-            // 2. إخفاء القائمة العلوية والفوتر لتبدو كبوابة منفصلة تماماً
             var header = document.querySelector('header');
             var footer = document.querySelector('footer');
             if (header) header.style.display = 'none';
             if (footer) footer.style.display = 'none';
             
-            // 3. منع ظهور نافذة الترحيب المنبثقة
             var welcomePopup = document.getElementById('welcome-popup');
             if (welcomePopup) welcomePopup.remove();
 
-            // 4. إضافة زر "تصفح الموقع" أسفل مربع فحص الشهادات
             var certContainer = document.querySelector('#page-verification .max-w-xl');
             if (certContainer && !document.getElementById('return-to-site-btn')) {
                 var btnHTML = '<button id="return-to-site-btn" onclick="restoreWebsiteView()" class="w-full mt-4 bg-slate-50 hover:bg-slate-100 text-[#0B1F4D] font-bold py-3.5 rounded-xl transition shadow-sm border border-slate-200 cursor-pointer flex justify-center items-center gap-2"><i class="fas fa-home text-lg"></i> الدخول وتصفح موقع الأكاديمية</button>';
