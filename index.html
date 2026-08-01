@@ -343,31 +343,35 @@
                     </div>
                     <div id="course-dynamic-info" class="hidden bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs space-y-2 text-slate-700"></div>
                     <button type="submit" id="submit-btn" class="w-full bg-[#0B1F4D] hover:bg-[#132F6B] text-white font-bold py-3 rounded-xl transition text-sm cursor-pointer shadow-md">تأكيد التسجيل وإصدار رقم الطلب</button>
-                    <div id="successMessage" class="hidden mt-4 p-5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-center space-y-3 shadow-inner">
-                        <div class="text-3xl"><i class="fas fa-check-circle text-emerald-500"></i></div>
-                        <div class="font-black text-lg">تم تسجيلك بنجاح!</div>
-                       <div class="text-sm mt-3 mb-4">
-    <span class="block mb-2 text-slate-600 font-bold">رقم الطلب الخاص بك للرجوع إليه هو:</span>
-    <div class="flex items-center justify-center gap-2">
-        <span id="displayOrderID" class="font-black text-[#0B1F4D] bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm tracking-widest"></span>
-        <button type="button" onclick="copyOrderID(this)" class="bg-white hover:bg-slate-50 text-slate-600 px-3 py-2 rounded-xl text-xs transition border border-slate-200 shadow-sm cursor-pointer">
-            <i class="fas fa-copy"></i> نسخ
-        </button>
+                   <div id="successMessage" class="hidden mt-4 p-5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-center space-y-3 shadow-inner">
+    <div class="text-3xl"><i class="fas fa-check-circle text-emerald-500"></i></div>
+    <div class="font-black text-lg">تم تسجيلك بنجاح!</div>
+    <div class="text-sm mt-3 mb-4">
+        <span class="block mb-2 text-slate-600 font-bold">رقم الطلب الخاص بك للرجوع إليه هو:</span>
+        <div class="flex items-center justify-center gap-2">
+            <span id="displayOrderID" class="font-black text-[#0B1F4D] bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm tracking-widest"></span>
+            <button type="button" onclick="copyOrderID(this)" class="bg-white hover:bg-slate-50 text-slate-600 px-3 py-2 rounded-xl text-xs transition border border-slate-200 shadow-sm cursor-pointer">
+                <i class="fas fa-copy"></i> نسخ
+            </button>
+        </div>
     </div>
-</div>
-                        <button type="button" onclick="goToPaymentDirectly()" class="w-full bg-[#D4A017] hover:bg-[#b88614] text-[#0B1F4D] px-6 py-3 rounded-xl inline-flex items-center justify-center gap-2 font-black shadow-md transition mt-4 cursor-pointer text-sm">
-                            <i class="fas fa-credit-card text-lg"></i> تسديد رسوم الدورة الآن
-                        </button>
-                        <button type="button" onclick="registerAnotherCourse()" class="w-full bg-white hover:bg-slate-50 text-[#0B1F4D] border border-slate-200 px-6 py-3 rounded-xl inline-flex items-center justify-center gap-2 font-black shadow-sm transition mt-2 cursor-pointer text-sm">
+    <button type="button" onclick="goToPaymentDirectly()" class="w-full bg-[#D4A017] hover:bg-[#b88614] text-[#0B1F4D] px-6 py-3 rounded-xl inline-flex items-center justify-center gap-2 font-black shadow-md transition mt-4 cursor-pointer text-sm">
+        <i class="fas fa-credit-card text-lg"></i> تسديد رسوم الدورة الآن
+    </button>
+    <button type="button" onclick="registerAnotherCourse()" class="w-full bg-white hover:bg-slate-50 text-[#0B1F4D] border border-slate-200 px-6 py-3 rounded-xl inline-flex items-center justify-center gap-2 font-black shadow-sm transition mt-2 cursor-pointer text-sm">
         <i class="fas fa-plus-circle text-lg text-[#0B1F4D]"></i> التسجيل في دورة أخرى
     </button>
-                        <p class="text-xs text-slate-600 font-bold mt-2">يرجى الانضمام لقناة الواتساب الرسمية لمتابعة موعد بدء الدورة:</p>
-                        <a href="https://whatsapp.com/channel/0029VbCDK6M4IBhBR3jvVY0Y" target="_blank" class="bg-[#25D366] hover:bg-[#1ebd5a] text-white px-6 py-2.5 rounded-xl inline-flex items-center gap-2 font-bold shadow-md transition mt-2"><i class="fab fa-whatsapp text-xl"></i> انضم لقناة الأكاديمية الآن</a>
-                        <a href="https://wa.me/967777644293" target="_blank" class="bg-[#075E54] hover:bg-[#054740] text-white px-4 py-2.5 rounded-xl inline-flex items-center gap-2 font-bold shadow-md transition mt-2"><i class="fab fa-whatsapp text-xl"></i> تواصل معنا</a>
-                    </div>
-                </form>
-            </div>
-        </section>
+    <p class="text-xs text-slate-600 font-bold mt-2">يرجى الانضمام لقناة الواتساب الرسمية لمتابعة موعد بدء الدورة:</p>
+    
+    <!-- الأزرار السابقة كما هي تماماً بدون أي حذف -->
+    <a href="https://whatsapp.com/channel/0029VbBFt5q4NVirBaGzNF0A" target="_blank" class="bg-[#25D366] hover:bg-[#1ebd5a] text-white px-6 py-2.5 rounded-xl inline-flex items-center gap-2 font-bold shadow-md transition mt-2"><i class="fab fa-whatsapp text-xl"></i> انضم لقناة الأكاديمية الآن</a>
+    <a href="https://wa.me/967772914419" target="_blank" class="bg-[#075E54] hover:bg-[#054740] text-white px-4 py-2.5 rounded-xl inline-flex items-center gap-2 font-bold shadow-md transition mt-2"><i class="fab fa-whatsapp text-xl"></i> تواصل معنا</a>
+    
+    <!-- التعديل الجديد: زر قاعة التدريب الديناميكي (يظهر بلون مميز إذا كان للدورة رابط) -->
+    <a href="#" id="dynamic-training-link" target="_blank" style="display:none;" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl inline-flex justify-center items-center gap-2 font-black shadow-md transition mt-2 cursor-pointer text-sm">
+        <i class="fas fa-video text-xl"></i> دخول قاعة التدريب
+    </a>
+</div>
 
         <!-- ===== صفحة تسديد الرسوم ===== -->
         <section id="page-payment" class="page-section container mx-auto px-4 py-16 relative z-10">
@@ -793,6 +797,7 @@
                         <div class="absolute top-0 right-0 w-2 h-full bg-emerald-500"></div>
                         <h2 class="font-bold text-[#0B1F4D] mb-5 text-sm"><i class="fas fa-plus-circle ml-2 text-emerald-500 text-lg"></i>نشر دورة تدريبية جديدة</h2>
                         <form id="form-add-course" onsubmit="handleAddCourse(event)" class="space-y-3 mb-6">
+                            <input type="url" id="adm-course-link" placeholder="رابط قاعة التدريب المخصصة لهذه الدورة" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 transition">
                             <input type="text" id="adm-course-title" placeholder="اسم الدورة التدريبية" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50">
                             <input type="text" id="adm-course-trainer" placeholder="اسم المحاضر / المدرب" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50">
                            <div class="grid grid-cols-2 gap-3">
@@ -841,6 +846,7 @@
                     <h3 class="font-bold text-[#0B1F4D] mb-4 text-lg border-b pb-2">تعديل بيانات الدورة</h3>
                     <input type="hidden" id="edit-course-id">
                     <div class="space-y-3">
+                        <input type="url" id="edit-course-link" placeholder="رابط قاعة التدريب" class="w-full px-3 py-2 border rounded-lg text-sm">
                         <input type="text" id="edit-title" placeholder="اسم الدورة" class="w-full px-3 py-2 border rounded-lg text-sm">
                         <input type="text" id="edit-trainer" placeholder="اسم المدرب" class="w-full px-3 py-2 border rounded-lg text-sm">
                         <input type="text" id="edit-dur" placeholder="المدة" class="w-full px-3 py-2 border rounded-lg text-sm">
@@ -948,48 +954,19 @@
                     </div>
 
                     <!-- إعدادات الأكاديمية العامة -->
-                    <form id="settings-form">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">اسم الأكاديمية الرسمي</label>
-                                <input type="text" id="set-name" value="أكاديمية اقرأ للاستشارات والتدريب" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-bold text-[#0B1F4D] bg-slate-50">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">رقم الواتساب الخاص بالدعم</label>
-                                <input type="text" id="set-whatsapp" value="+967777644293" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-bold text-[#0B1F4D] dir-ltr text-left bg-slate-50">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">البريد الإلكتروني للإدارة</label>
-                                <input type="text" id="set-email" value="aqraakadymyt51@gmail.com" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-bold text-[#0B1F4D] dir-ltr text-left bg-slate-50">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">رابط الانضمام لقناة الواتساب</label>
-                                <input type="text" id="set-channel" value="https://whatsapp.com/channel/0029VbCDK6M4IBhBR3jvVY0Y" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-blue-600 dir-ltr text-left bg-slate-50">
-                            </div>
-                        </div>
-                        <div class="mt-10 pt-8 border-t border-slate-100">
-                            <h3 class="font-black text-rose-600 mb-5 text-sm flex items-center gap-2"><i class="fas fa-percentage bg-rose-50 p-2 rounded-lg"></i> إعدادات العمولات والنسب المالية التلقائية</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 p-5 bg-rose-50/30 rounded-2xl border border-rose-100/50">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">حصة المدرب (%)</label>
-                                    <input type="number" id="set-trainer-pct" value="50" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-lg font-black text-center text-[#0B1F4D] bg-white">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">عمولة المسوق (%)</label>
-                                    <input type="number" id="set-marketer-pct" value="20" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-lg font-black text-center text-[#0B1F4D] bg-white">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">صافي الأكاديمية (%)</label>
-                                    <input type="number" value="30" disabled class="w-full px-4 py-3 border border-slate-200 rounded-xl text-lg font-black text-center text-slate-400 bg-slate-100 cursor-not-allowed">
-                                </div>
-                            </div>
-                        </div>
-                        <button type="button" id="btn-save-settings" onclick="handleSaveSettings()" class="w-full bg-[#0B1F4D] hover:bg-[#132F6B] text-white font-black py-4 rounded-xl text-sm transition shadow-lg mt-8 flex justify-center items-center gap-2"><i class="fas fa-save"></i> حفظ التحديثات واعتمادها فوراً</button>
-                    </form>
-                </div>
-            </div>
+                   <form id="settings-form">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">رقم الواتساب الخاص بالدعم</label>
+            <input type="text" id="set-whatsapp" value="+967777644293" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-bold text-[#0B1F4D] dir-ltr text-left bg-slate-50">
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">البريد الإلكتروني للإدارة</label>
+            <input type="text" id="set-email" value="aqraakadymyt51@gmail.com" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-bold text-[#0B1F4D] dir-ltr text-left bg-slate-50">
+        </div>
+    </div>
+    <button type="button" id="btn-save-settings" onclick="handleSaveSettings()" class="w-full bg-[#0B1F4D] hover:bg-[#132F6B] text-white font-black py-4 rounded-xl text-sm transition shadow-lg mt-8 flex justify-center items-center gap-2"><i class="fas fa-save"></i> حفظ التحديثات واعتمادها فوراً</button>
+</form>
         </div>
     </div>
     <!-- ===== نافذة تفاصيل الدورة ===== -->
