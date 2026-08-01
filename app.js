@@ -475,7 +475,12 @@ function updateRegistrationDropdown(courses) {
     }
 }
 
-function selectCourseDirectly(courseTitle) { 
+ffunction selectCourseDirectly(courseTitle) { 
+    // السطر الجديد لحل مشكلة تعليق الزر
+    if (typeof registerAnotherCourse === 'function') {
+        registerAnotherCourse(); 
+    }
+    
     document.getElementById('reg-course').value = courseTitle; 
     showSelectedCourseDetails();
     navigateTo('register'); 
@@ -1085,12 +1090,8 @@ async function handleSaveSettings() {
     btn.disabled = true;
 
     var settingsData = {
-        name: document.getElementById('set-name').value,
-        whatsapp: document.getElementById('set-whatsapp').value,
-        email: document.getElementById('set-email').value,
-        channel: document.getElementById('set-channel').value,
-        trainer_pct: document.getElementById('set-trainer-pct').value,
-        marketer_pct: document.getElementById('set-marketer-pct').value
+        whatsapp: document.getElementById('set-whatsapp') ? document.getElementById('set-whatsapp').value : '',
+        email: document.getElementById('set-email') ? document.getElementById('set-email').value : ''
     };
 
     try {
@@ -1203,7 +1204,7 @@ async function deleteNews(title) {
 // دوال تعديل الدورات
 // ==========================================
 
-function openEditCourseModal(id, title, trainer, dur, fee, cat, discount) {
+function openEditCourseModal(id, title, trainer, dur, fee, cat, discount, link) {
     document.getElementById('edit-course-id').value = id;
     document.getElementById('edit-title').value = title;
     document.getElementById('edit-trainer').value = trainer;
