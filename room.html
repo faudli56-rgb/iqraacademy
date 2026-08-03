@@ -270,15 +270,23 @@
             area.appendChild(div); area.scrollTop = area.scrollHeight;
         }
 
-        function triggerReaction(emoji) {
-            const zone = document.getElementById('reaction-fly-zone');
-            if (!zone) return;
-            const el = document.createElement('div');
-            el.className = 'reaction-emoji'; el.innerText = emoji;
-            el.style.left = Math.random() * 70 + '%'; 
-            zone.appendChild(el);
-            setTimeout(() => el.remove(), 3000); 
-        }
+       function triggerReaction(emoji, isLocal = true) {
+    const zone = document.getElementById('reaction-fly-zone');
+    if (!zone) return;
+    const el = document.createElement('div');
+    el.className = 'reaction-emoji'; el.innerText = emoji;
+    el.style.left = Math.random() * 70 + '%'; 
+    zone.appendChild(el);
+    setTimeout(() => el.remove(), 3000); 
+    
+    // إرسال التفاعل للخادم كرسالة صامتة ليراها البقية
+    if (isLocal) {
+        messageBatch.push({
+            id: Date.now(), sender: currentUser.name, text: emoji, type: 'reaction',
+            timestamp: new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})
+        });
+    }
+}
 
         let isVideoFullscreen = false;
         function toggleVideoFullscreen() {
@@ -360,39 +368,58 @@
             }
         }
 
-        function startWorkshops(isAutoTriggered) {
-            document.getElementById('youtube-container').classList.add('hidden');
-            document.getElementById('whiteboard-container').classList.add('hidden');
-            document.getElementById('jitsi-container').classList.remove('hidden');
-            
-            const roomNumber = 'IqraAcademy_Live_Workshop_Official'; 
-            const isAdmin = (currentUser.role === 'admin' || currentUser.role === 'trainer' || currentUser.role === 'assistant');
+        async function startWorkshops(isAutoTriggered) {
+    document.getElementById('youtube-container').classList.add('hidden');
+    document.getElementById('whiteboard-container').classList.add('hidden');
+    document.getElementById('jitsi-container').classList.remove('hidden');
+    
+    const isAdmin = (currentUser.role === 'admin' || currentUser.role === 'trainer' || currentUser.role === 'assistant');
 
-            const options = {
-                roomName: roomNumber, width: '100%', height: '100%',
-                parentNode: document.getElementById('jitsi-container'),
-                userInfo: { displayName: currentUser.name },
-                configOverwrite: { 
-                    prejoinPageEnabled: true, // تفعيل شاشة التجهيز للجميع لفك تجميد الكاميرا والمايك
-                    startWithAudioMuted: true,
-                    startWithVideoMuted: true,
-                    disableDeepLinking: true
-                },
-                interfaceConfigOverwrite: {
-                    SHOW_JITSI_WATERMARK: false,
-                    // أضفنا الإعدادات (settings) للطلاب ليتمكنوا من اختيار المايك الخاص بهم
-                    TOOLBAR_BUTTONS: isAdmin ? 
-                        ['microphone', 'camera', 'desktop', 'fullscreen', 'profile', 'chat', 'settings', 'raisehand', 'videoquality', 'participants-pane', 'tileview', 'mute-everyone', 'security'] : 
-                        ['microphone', 'camera', 'raisehand', 'fullscreen', 'chat', 'tileview', 'settings'],
-                    // أضفنا قسم الأجهزة (devices) للطلاب
-                    SETTINGS_SECTIONS: isAdmin ? ['devices', 'language', 'moderator', 'profile', 'sounds'] : ['devices', 'language', 'profile']
-                }
-            };
-            
-            if (jitsiApi) jitsiApi.dispose();
-            jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', options);
-            if(!isAutoTriggered && isAdmin) alert("تم فتح الورشة التفاعلية وتوحيد الغرفة!");
+    try {
+        // نطلب المفتاح من جوجل سكربت (سيتم توليد مفتاح جديد طازج في كل مرة)
+        const configRes = await callAPI('getJitsiConfig', { userName: currentUser.name, isAdmin: isAdmin });
+        
+        if (!configRes || !configRes.success) {
+            alert("حدث خطأ أثناء محاولة جلب تصريح الدخول للقاعة.");
+            return;
         }
+
+        const APP_ID = configRes.appId;
+        const JWT_TOKEN = configRes.jwt; // هذا المفتاح جديد وصالح لساعتين
+
+        const roomNumber = APP_ID + '/IqraAcademy_Live_Workshop_Official'; 
+        const domain = '8x8.vc'; 
+        
+        const options = {
+            roomName: roomNumber, 
+            width: '100%', 
+            height: '100%',
+            parentNode: document.getElementById('jitsi-container'),
+            jwt: JWT_TOKEN, 
+            userInfo: { displayName: currentUser.name },
+            configOverwrite: { 
+                prejoinPageEnabled: true, 
+                startWithAudioMuted: true,
+                startWithVideoMuted: true,
+                disableDeepLinking: true
+            },
+            interfaceConfigOverwrite: {
+                SHOW_JITSI_WATERMARK: false,
+                TOOLBAR_BUTTONS: isAdmin ? 
+                    ['microphone', 'camera', 'desktop', 'fullscreen', 'profile', 'chat', 'settings', 'raisehand', 'videoquality', 'participants-pane', 'tileview', 'mute-everyone', 'security'] : 
+                    ['microphone', 'camera', 'raisehand', 'fullscreen', 'chat', 'tileview', 'settings'],
+                SETTINGS_SECTIONS: isAdmin ? ['devices', 'language', 'moderator', 'profile', 'sounds'] : ['devices', 'language', 'profile']
+            }
+        };
+        
+        if (jitsiApi) jitsiApi.dispose();
+        jitsiApi = new JitsiMeetExternalAPI(domain, options);
+        if(!isAutoTriggered && isAdmin) alert("تم فتح الورشة التفاعلية وتوحيد الغرفة بنجاح!");
+
+    } catch (error) {
+        console.error("فشل الاتصال بالخادم لجلب تصاريح Jitsi:", error);
+    }
+}
 
         function closeWorkshops(isAutoTriggered) {
             if (jitsiApi) { jitsiApi.dispose(); jitsiApi = null; }
@@ -427,46 +454,55 @@
             }
         }
 
-        // مزامنة البيانات بين الأجهزة (تعمل بشكل صحيح إذا كان رابط Vercel والسيرفر متصلين)
-        setInterval(() => {
-            if (messageBatch.length > 0 && typeof callAPI === 'function') {
-                const payload = [...messageBatch];
-                messageBatch = []; 
-                callAPI('saveChatBatch', { messages: payload }).catch(() => messageBatch.push(...payload));
-            }
-            if (typeof callAPI === 'function') {
-                callAPI('syncRoomState', { lastMsgId: lastSyncedMsgId }).then(res => {
-                    if (res && res.success) {
-                        if (res.messages) res.messages.forEach(msg => { if (msg.sender !== currentUser.name) displayMessage(msg); lastSyncedMsgId = Math.max(lastSyncedMsgId, msg.id); });
-                        if (res.state.live_yt_id && currentRoomState.live_yt_id !== res.state.live_yt_id) {
-                            currentRoomState.live_yt_id = res.state.live_yt_id;
-                            let vidId = res.state.live_yt_id;
-                            document.getElementById('yt-iframe').src = `https://www.youtube.com/embed/${vidId}?autoplay=1&modestbranding=1&controls=0&rel=0&playsinline=1`;
-                            document.getElementById('no-video-msg').style.display = 'none'; 
-                        }
-                        // استقبال أمر تشغيل الورشة من الإدارة للأجهزة الأخرى
-                        if (res.state.workshops_active === 'true' && document.getElementById('jitsi-container').classList.contains('hidden')) startWorkshops(true); 
-                        else if (res.state.workshops_active === 'false' && !document.getElementById('jitsi-container').classList.contains('hidden')) closeWorkshops(true);
-                    }
-                }).catch(e => console.log(e));
-            }
-        }, 15000);
-// تسجيل وقت الدخول عند فتح القاعة
-const joinTime = new Date().toISOString();
-
-// إرسال بيانات الحضور عند إغلاق أو تحديث الصفحة
-window.addEventListener('beforeunload', function () {
-    const leaveTime = new Date().toISOString();
-    if (typeof callAPI === 'function') {
-        callAPI('recordAttendance', {
-            orderId: currentUser.id,
-            studentName: currentUser.name,
-            course: "غرفة البث المباشر",
-            joinTime: joinTime,
-            leaveTime: leaveTime
-        });
+        // مزامنة البيانات السريعة ونبضات التواجد
+setInterval(() => {
+    if (messageBatch.length > 0 && typeof callAPI === 'function') {
+        const payload = [...messageBatch];
+        messageBatch = []; 
+        callAPI('saveChatBatch', { messages: payload }).catch(() => messageBatch.push(...payload));
     }
-});
+    if (typeof callAPI === 'function') {
+        // تم إضافة activeUser هنا لإثبات التواجد وجلب قائمة الحضور
+        callAPI('syncRoomState', { lastMsgId: lastSyncedMsgId, activeUser: currentUser.name }).then(res => {
+            if (res && res.success) {
+                // معالجة الرسائل والتفاعلات
+                if (res.messages) {
+                    res.messages.forEach(msg => { 
+                        if (msg.sender !== currentUser.name) {
+                            if (msg.type === 'reaction') {
+                                triggerReaction(msg.text, false); // عرض تفاعل الآخرين
+                            } else {
+                                displayMessage(msg); 
+                            }
+                        }
+                        lastSyncedMsgId = Math.max(lastSyncedMsgId, msg.id); 
+                    });
+                }
+                
+                // تحديث قائمة الحضور حياً (الكود الجديد الذي يعرض الحضور)
+                if (res.activeUsers) {
+                    document.getElementById('attendee-count').innerText = res.activeUsers.length;
+                    const list = document.getElementById('attendees-list');
+                    list.innerHTML = '';
+                    res.activeUsers.forEach(user => {
+                        list.innerHTML += `<li class="p-2 bg-white rounded shadow-sm border border-slate-100 flex items-center gap-2 text-xs"><i class="fas fa-user-circle text-emerald-500"></i> ${user}</li>`;
+                    });
+                }
+
+                // تحديث حالة البث
+                if (res.state.live_yt_id && currentRoomState.live_yt_id !== res.state.live_yt_id) {
+                    currentRoomState.live_yt_id = res.state.live_yt_id;
+                    document.getElementById('yt-iframe').src = `https://www.youtube.com/embed/${res.state.live_yt_id}?autoplay=1&modestbranding=1&controls=0&rel=0&playsinline=1`;
+                    document.getElementById('no-video-msg').style.display = 'none'; 
+                }
+                
+                // تحديث حالة غرف Jitsi
+                if (res.state.workshops_active === 'true' && document.getElementById('jitsi-container').classList.contains('hidden')) startWorkshops(true); 
+                else if (res.state.workshops_active === 'false' && !document.getElementById('jitsi-container').classList.contains('hidden')) closeWorkshops(true);
+            }
+        }).catch(e => console.log(e));
+    }
+}, 5000); // تم تقليل الوقت إلى 5 ثوانٍ لسرعة الاستجابة
     </script>
 </body>
 </html>
