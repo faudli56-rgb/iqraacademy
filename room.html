@@ -397,11 +397,11 @@
             parentNode: document.getElementById('jitsi-container'),
             jwt: JWT_TOKEN, 
             userInfo: { displayName: currentUser.name },
-            configOverwrite: { 
+           configOverwrite: { 
                 prejoinPageEnabled: false, 
                 startWithAudioMuted: true,
                 startWithVideoMuted: true,
-                disableDeepLinking: true
+                disableDeepLinking: true, // ✅ تمت إضافة الفاصلة
                 defaultLanguage: 'ar'
             },
             interfaceConfigOverwrite: {
@@ -456,22 +456,22 @@
         }
 
         // مزامنة البيانات السريعة ونبضات التواجد
-setInterval(() => {
+// نظام المزامنة الذكي (يمنع تشنج المتصفح وتراكم الطلبات)
+async function startRoomPolling() {
     if (messageBatch.length > 0 && typeof callAPI === 'function') {
         const payload = [...messageBatch];
         messageBatch = []; 
         callAPI('saveChatBatch', { messages: payload }).catch(() => messageBatch.push(...payload));
     }
     if (typeof callAPI === 'function') {
-        // تم إضافة activeUser هنا لإثبات التواجد وجلب قائمة الحضور
-        callAPI('syncRoomState', { lastMsgId: lastSyncedMsgId, activeUser: currentUser.name }).then(res => {
+        try {
+            const res = await callAPI('syncRoomState', { lastMsgId: lastSyncedMsgId, activeUser: currentUser.name });
             if (res && res.success) {
-                // معالجة الرسائل والتفاعلات
                 if (res.messages) {
                     res.messages.forEach(msg => { 
                         if (msg.sender !== currentUser.name) {
                             if (msg.type === 'reaction') {
-                                triggerReaction(msg.text, false); // عرض تفاعل الآخرين
+                                triggerReaction(msg.text, false);
                             } else {
                                 displayMessage(msg); 
                             }
@@ -480,7 +480,6 @@ setInterval(() => {
                     });
                 }
                 
-                // تحديث قائمة الحضور حياً (الكود الجديد الذي يعرض الحضور)
                 if (res.activeUsers) {
                     document.getElementById('attendee-count').innerText = res.activeUsers.length;
                     const list = document.getElementById('attendees-list');
@@ -490,20 +489,26 @@ setInterval(() => {
                     });
                 }
 
-                // تحديث حالة البث
                 if (res.state.live_yt_id && currentRoomState.live_yt_id !== res.state.live_yt_id) {
                     currentRoomState.live_yt_id = res.state.live_yt_id;
                     document.getElementById('yt-iframe').src = `https://www.youtube.com/embed/${res.state.live_yt_id}?autoplay=1&modestbranding=1&controls=0&rel=0&playsinline=1`;
                     document.getElementById('no-video-msg').style.display = 'none'; 
                 }
                 
-                // تحديث حالة غرف Jitsi
                 if (res.state.workshops_active === 'true' && document.getElementById('jitsi-container').classList.contains('hidden')) startWorkshops(true); 
                 else if (res.state.workshops_active === 'false' && !document.getElementById('jitsi-container').classList.contains('hidden')) closeWorkshops(true);
             }
-        }).catch(e => console.log(e));
+        } catch(e) {
+            console.log("خطأ في الاتصال، سيتم المحاولة مجدداً.");
+        }
     }
-}, 5000); // تم تقليل الوقت إلى 5 ثوانٍ لسرعة الاستجابة
+    
+    // جدولة الطلب القادم بعد 5 ثوانٍ من انتهاء الطلب الحالي
+    setTimeout(startRoomPolling, 5000);
+}
+
+// بدء تشغيل الرادار والمزامنة
+setTimeout(startRoomPolling, 2000);
     </script>
 </body>
 </html>
